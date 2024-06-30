@@ -6,6 +6,7 @@ from dash import html
 import plotly.graph_objs as go
 from dash.dependencies import Input, Output
 from datetime import date, timedelta
+import pandas as pd
 
 # getAllDataToCSV()
 algorithms = [
@@ -14,6 +15,24 @@ algorithms = [
   {'label': 'XGBoost', 'value': 'xgboost'},
 ]
 
+df = pd.read_csv('./data/BTC-USD.csv')
+df['Date'] = pd.to_datetime(df['Date'])
+# Tạo biểu đồ nến sử dụng Plotly
+fig = go.Figure(data=[go.Candlestick(
+    x=df['Date'],
+    open=df['Open'],
+    high=df['High'],
+    low=df['Low'],
+    close=df['Close'],
+    name='Stock Price'
+)])
+
+fig.update_layout(
+    title='Stock Price Analysis',
+    yaxis_title='Stock Price (USD)',
+    # xaxis_title='Date',
+    xaxis_rangeslider_visible=False
+)
 
 # initialize
 app = dash.Dash()
@@ -104,9 +123,19 @@ app.layout = html.Div(
 
     # title
     html.H1("Stock Price Analysis Dashboard", style={"textAlign": "left", "margin": "20px"}),
-
+    # graph presentation
+    html.Div(
+        children = [
+            dcc.Loading(
+                dcc.Graph(
+                    id='candlestick-graph',
+                    figure=fig
+                )
+            ),
+        ],
+        style={"border": "solid 1px gray", "marginTop": "10px"}  
+    ),
 ])
-
 
 # start app
 if __name__=='__main__':
