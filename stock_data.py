@@ -16,12 +16,12 @@ def getStockDataToNow(stock, days):
   return data
 
 
-def getAllDataToCSV():
-  coins = ["BTC-USD", "ETH-USD",
-        #  "BNB-USD", "ADA-USD", "XRP-USD",
-        #  "SOL-USD", "DOT-USD", "DOGE-USD", "SHIB-USD", "LTC-USD"
-         ]
+coins = ["BTC-USD", "ETH-USD",
+    #  "BNB-USD", "ADA-USD", "XRP-USD",
+    #  "SOL-USD", "DOT-USD", "DOGE-USD", "SHIB-USD", "LTC-USD"
+      ]
 
+def getAllDataToCSV():
   for coin in coins:
     data = getStockDataToNow(coin, 5*365)
     data.to_csv(f'./data/{coin}.csv')
