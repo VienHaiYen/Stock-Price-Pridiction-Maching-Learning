@@ -30,20 +30,30 @@ class TrainDataProvider:
         data = data.drop(["Date"], axis=1)
         data.sort_index(ascending=True, axis=0, inplace=True)
         return data
-    def getXYData(self, data):
-        x_data = data[self.features]
-        y_data = data[candel_columns]
+    
+    def extractData(self, data: pd.DataFrame):
+        return data[[*self.features, *candel_columns]]
+
+    def getXYData(self, data: pd.DataFrame):
+        x_data = data[self.features].values
+        y_data = data[candel_columns].values
         return x_data, y_data
-    def scaleData(self, data):
+
+    def scaleData(self, data: pd.DataFrame):
         scaler = MinMaxScaler(feature_range=(0, 1))
-        return scaler.fit_transform(data)
+        scaled_data = scaler.fit_transform(data)
+        return pd.DataFrame(scaled_data, columns=data.columns)
+        
+
     def getTrainDataset(self, x_data, y_data, windowSize):
         assert x_data.ndim == 2
         assert isinstance(x_data, np.ndarray)
         assert len(x_data) == len(y_data)
 
         num_features = x_data.shape[1]
-        X = np.lib.stride_tricks.sliding_window_view(x_data[:-1, :], window_shape=(windowSize, num_features), axis=(0,1))
+        X = np.lib.stride_tricks.sliding_window_view(
+            x_data[:-1, :], window_shape=(windowSize, num_features), axis=(0, 1)
+        )
         X = X.reshape(-1, windowSize, num_features)
         Y = y_data[windowSize:, :]
 
@@ -53,9 +63,9 @@ class TrainDataProvider:
         # get data
         data = self.getDataFromFile()
         data["ROC"] = ROCCalculator().fromClose(data["Close"])
-        x_data, y_data = self.getXYData(data)
-        x_data = self.scaleData(x_data)
-        y_data = self.scaleData(y_data)
+        extracted_data = self.extractData(data)
+        scaled_data = self.scaleData(extracted_data)
+        x_data, y_data = self.getXYData(scaled_data)
         x_train, y_train = self.getTrainDataset(x_data, y_data, self.windowSize)
 
         return x_train, y_train
