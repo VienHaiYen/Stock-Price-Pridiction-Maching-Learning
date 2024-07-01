@@ -15,25 +15,6 @@ algorithms = [
   {'label': 'XGBoost', 'value': 'xgboost'},
 ]
 
-df = pd.read_csv('./data/BTC-USD.csv')
-df['Date'] = pd.to_datetime(df['Date'])
-# Tạo biểu đồ nến sử dụng Plotly
-fig = go.Figure(data=[go.Candlestick(
-    x=df['Date'],
-    open=df['Open'],
-    high=df['High'],
-    low=df['Low'],
-    close=df['Close'],
-    name='Stock Price'
-)])
-
-fig.update_layout(
-    title='Stock Price Analysis',
-    yaxis_title='Stock Price (USD)',
-    # xaxis_title='Date',
-    xaxis_rangeslider_visible=False
-)
-
 # initialize
 app = dash.Dash()
 server = app.server
@@ -50,12 +31,12 @@ app.layout = html.Div(
               ],
               style={
                   'display': 'flex',
-									'justify-content': 'space-between',
+                  'justify-content': 'space-between',
                   'backgroundColor': 'black',
                   'color': 'white',
                   'padding': '12px 20px',
                   'textAlign': 'center',
-									'fontWeight': 'bold'
+                  'fontWeight': 'bold'
               }
           ),
 
@@ -129,13 +110,48 @@ app.layout = html.Div(
             dcc.Loading(
                 dcc.Graph(
                     id='candlestick-graph',
-                    figure=fig
                 )
             ),
         ],
         style={"border": "solid 1px gray", "marginTop": "10px"}  
     ),
 ])
+
+
+
+@app.callback(
+    Output('candlestick-graph', 'figure'),
+    [
+        Input('coin-dropdown', 'value'),
+        Input('algorithm-dropdown', 'value'),
+        Input('price-type-dropdown', 'value'),
+        Input('start-date', 'date'),
+        Input('end-date', 'date')
+    ]
+)
+def update_volume_graph(coin, algorithm, price_type, start_date, end_date):
+    # Đọc dữ liệu từ tệp CSV dựa trên coin được chọn theo ngày
+    df = pd.read_csv(f'./data/{coin}.csv')
+    df = df.loc[(df['Date'] >= start_date) & (df['Date'] <= end_date)]
+
+    # Tạo biểu đồ nến
+    figure = go.Figure(data=[go.Candlestick(
+        x=df['Date'],
+        open=df['Open'],
+        high=df['High'],
+        low=df['Low'],
+        close=df['Close'],
+        name='Stock Price'
+    )])
+
+    figure.update_layout(
+        title=f'Stock Price Analysis ({coin})',
+        yaxis_title='Stock Price (USD)',
+        xaxis_title='Date',
+        xaxis_rangeslider_visible=False
+    )
+
+    return figure
 
 # start app
 if __name__=='__main__':
