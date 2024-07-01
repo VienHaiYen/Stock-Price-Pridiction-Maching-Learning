@@ -1,5 +1,6 @@
 import yfinance as yf
 from datetime import date, timedelta
+from constants import coins
 
 
 def getStockData(stock, start_date, end_date):
@@ -18,12 +19,7 @@ def getStockDataToNow(stock, days):
 
 
 def getAllDataToCSV():
-  coins = [
-      "BTC-USD",
-      "ETH-USD",
-      #  "BNB-USD", "ADA-USD", "XRP-USD",
-      #  "SOL-USD", "DOT-USD", "DOGE-USD", "SHIB-USD", "LTC-USD"
-  ]
+
 
   for coin in coins:
       data = getStockDataToNow(coin, 5 * 365)
