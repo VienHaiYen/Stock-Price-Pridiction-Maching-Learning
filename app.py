@@ -1,4 +1,4 @@
-from stock_data import getAllDataToCSV, coins
+from stock_data import getStockData, coins
 
 import dash
 from dash import dcc
@@ -130,9 +130,9 @@ app.layout = html.Div(
     ]
 )
 def update_volume_graph(coin, algorithm, price_type, start_date, end_date):
-    # Đọc dữ liệu từ tệp CSV dựa trên coin được chọn theo ngày
-    df = pd.read_csv(f'./data/{coin}.csv')
-    df = df.loc[(df['Date'] >= start_date) & (df['Date'] <= end_date)]
+    # Đọc dữ liệu dựa trên coin được chọn theo ngày
+    df = getStockData(coin, start_date, end_date)
+    df['Date'] = df.index
 
     # Tạo biểu đồ nến
     figure = go.Figure(data=[go.Candlestick(

@@ -3,9 +3,7 @@ from datetime import date, timedelta
 
 
 def getStockData(stock, start_date, end_date):
-  # get data
-  yf_clone = yf
-  data = yf_clone.download(stock, start_date, end_date)
+  data = yf.download(stock, start_date, end_date)
   return data
 
 def getStockDataToNow(stock, days):
@@ -20,8 +18,3 @@ coins = ["BTC-USD", "ETH-USD",
     #  "BNB-USD", "ADA-USD", "XRP-USD",
     #  "SOL-USD", "DOT-USD", "DOGE-USD", "SHIB-USD", "LTC-USD"
       ]
-
-def getAllDataToCSV():
-  for coin in coins:
-    data = getStockDataToNow(coin, 5*365)
-    data.to_csv(f'./data/{coin}.csv')
