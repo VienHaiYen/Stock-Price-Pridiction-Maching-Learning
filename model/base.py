@@ -54,23 +54,6 @@ class ModelInputValidator:
         return FeatureValidator(self.model.features).areValidFeatures(data.columns)
 
 
-class ModelPredictService:
-    def __init__(self, model: Model):
-        self.model = model
-        self.inputExtractor = ModelInputExtractor(model)
-        self.inputValidator = ModelInputValidator(model)
-
-    def predict(self, data):
-        print(f"Predicting with {self.model.modelName} on data: {data}")
-        raise NotImplementedError("Subclasses must implement abstract method")
-
-    def execute(self, data):
-        if not self.inputValidator.isValidInput(data):
-            raise ValueError("Invalid input")
-        data = self.inputExtractor.extractData(data)
-        return self.predict(data)
-
-
 class ModelLoader:
     def __init__(self, model: Model):
         self.model = model
@@ -78,14 +61,33 @@ class ModelLoader:
     def loadModel(self):
         raise NotImplementedError("Subclasses must implement abstract method")
 
+
+class ModelPredictService:
+    def __init__(self, model: Model, modelLoadder: ModelLoader):
+        self.model = model
+        self.inputExtractor = ModelInputExtractor(model)
+        self.inputValidator = ModelInputValidator(model)
+        self.modelLoader = modelLoadder
+
+    def predict(self, loaded_model, data: pd.DataFrame):
+        print(f"Predicting with {self.model.modelName} on data: {data}")
+        raise NotImplementedError("Subclasses must implement abstract method")
+
+    def execute(self, data):
+        if not self.inputValidator.isValidInput(data):
+            raise ValueError("Invalid input")
+        data = self.inputExtractor.extractData(data)
+        model = self.modelLoader.loadModel()
+        return self.predict(model, data)
+
+
 class ModelFileService:
     def getModelFileDirectory(self):
         return "./model/built_models"
 
-    def getModelFileName(self, model:Model):
-        return (
-            f"./model/built_models/{model.modelName}_{model.coin}_{'_'.join(model.features)}.keras"
-        )
+    def getModelFileName(self, model: Model):
+        return f"./model/built_models/{model.modelName}_{model.coin}_{'_'.join(model.features)}.keras"
+
 
 class ModelBuilder:
     def __init__(self, model: Model):
