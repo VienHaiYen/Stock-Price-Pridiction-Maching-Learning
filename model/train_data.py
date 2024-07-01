@@ -32,7 +32,7 @@ class TrainDataProvider:
         return data
     
     def extractData(self, data: pd.DataFrame):
-        return data[[*self.features, *candel_columns]]
+        return data[list(set([*self.features, *candel_columns]))]
 
     def getXYData(self, data: pd.DataFrame):
         x_data = data[self.features].values
@@ -62,9 +62,7 @@ class TrainDataProvider:
     def getTrainData(self):
         # get data
         data = self.getDataFromFile()
-        data["ROC"] = ROCCalculator().fromClose(data["Close"])
-        extracted_data = self.extractData(data)
-        scaled_data = self.scaleData(extracted_data)
+        scaled_data = self.scaleData(data)
         x_data, y_data = self.getXYData(scaled_data)
         x_train, y_train = self.getTrainDataset(x_data, y_data, self.windowSize)
 
