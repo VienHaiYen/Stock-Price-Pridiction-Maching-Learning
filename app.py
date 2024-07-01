@@ -1,5 +1,4 @@
-import datetime
-from stock_data import getStockData, coins
+from trading_data import getTradeData
 
 import dash
 from dash import dcc
@@ -15,6 +14,10 @@ algorithms = [
   {'label': 'RNN', 'value': 'rnn'},
   {'label': 'XGBoost', 'value': 'xgboost'},
 ]
+coins = ["BTC-USD", "ETH-USD",
+     "BNB-USD", "ADA-USD", "XRP-USD",
+     "SOL-USD", "DOT-USD", "DOGE-USD", "SHIB-USD", "LTC-USD"
+      ]
 
 # initialize
 app = dash.Dash()
@@ -27,7 +30,7 @@ app.layout = html.Div(
     #header
     html.Div(
               children=[
-								html.Span("Stock Price Analysis"),
+								html.Span("Trading Price Analysis"),
                 html.Span("Team 3")
               ],
               style={
@@ -96,7 +99,7 @@ app.layout = html.Div(
                 {'label': 'High Price', 'value': 'High'},
                 {'label': 'ROC', 'value': 'ROC'},
             ],
-            value='Open',
+            value=['Open', 'Close', 'Low', 'High', 'ROC'],
             clearable=False,
 						style={"width": "auto", 'min-width': '200px'}
             ),
@@ -104,7 +107,7 @@ app.layout = html.Div(
     ),
 
     # title
-    html.H1("Stock Price Analysis Dashboard", style={"textAlign": "left", "margin": "20px"}),
+    html.H1("Trading Price Analysis Dashboard", style={"textAlign": "left", "margin": "20px"}),
     # graph presentation
     html.Div(
         children = [
@@ -118,8 +121,7 @@ app.layout = html.Div(
     ),
 ])
 
-
-
+# TRADING PRICE
 @app.callback(
     Output('candlestick-graph', 'figure'),
     [
@@ -130,26 +132,34 @@ app.layout = html.Div(
         Input('end-date', 'date')
     ]
 )
-def update_volume_graph(coin, algorithm, price_type, start_date, end_date):
+def update_trading_price_graph(coin, algorithm, price_type, start_date, end_date):
     # Đọc dữ liệu dựa trên coin được chọn theo ngày
-    df = getStockData(coin, start_date, end_date)
+    df = getTradeData(coin, start_date, end_date)
     df['Date'] = df.index
 
     # Tạo biểu đồ nến
-    figure = go.Figure(data=[go.Candlestick(
+    figure = go.Figure(data=[
+			go.Candlestick(
         x=df['Date'],
         open=df['Open'],
         high=df['High'],
         low=df['Low'],
         close=df['Close'],
-        name='Stock Price'
-    )])
+        name='Trading Price'
+			),
+				# go.Line(
+				# 		x=df['Date'],
+				# 		y=df['Volume'],
+				# 		name='Trading Volume',
+				# 		yaxis='y2'
+				# )
+		])
 
     addPredictCandle(figure, df['Date'].max() + timedelta(1))
 
     figure.update_layout(
-        title=f'Stock Price Analysis ({coin})',
-        yaxis_title='Stock Price (USD)',
+        title=f'Trading Price Analysis ({coin})',
+        yaxis_title='Trading Price (USD)',
         xaxis_title='Date',
         xaxis_rangeslider_visible=False
     )
@@ -158,17 +168,20 @@ def update_volume_graph(coin, algorithm, price_type, start_date, end_date):
 
 def addPredictCandle(figure, date):
 	# Thêm cây nến mới với màu sắc khác (ví dụ: màu xanh dương)
-    new_candle = go.Candlestick(
-        x=[date],  # Ngày của cây nến mới
-        open=[63000.00],  # Giá mở cửa của cây nến mới
-        high=[68000.00],  # Giá cao nhất của cây nến mới
-        low=[61000.00],  # Giá thấp nhất của cây nến mới
-        close=[67500.00],  # Giá đóng cửa của cây nến mới
-        increasing=dict(line=dict(color='blue')),
-        decreasing=dict(line=dict(color='blue'))
-    )
+	new_candle = go.Candlestick(
+			x=[date],  # Ngày của cây nến mới
+			open=[63000.00],  # Giá mở cửa của cây nến mới
+			high=[68000.00],  # Giá cao nhất của cây nến mới
+			low=[61000.00],  # Giá thấp nhất của cây nến mới
+			close=[67500.00],  # Giá đóng cửa của cây nến mới
+			increasing=dict(line=dict(color='blue')),
+			decreasing=dict(line=dict(color='yellow')),
+			name='Predicted Trading Price'
+	)
 
-    figure.add_trace(new_candle)
+	figure.add_trace(new_candle)
+
+
 
 # start app
 if __name__=='__main__':
