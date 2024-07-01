@@ -11,6 +11,37 @@ class ROCCalculator:
         return ((close - close.shift(1)) / close.shift(1)).fillna(0)
 
 
+class DataScaler:
+    def __init__(self, data: pd.DataFrame):
+        scaler = MinMaxScaler(feature_range=(0, 1))
+        self.scaler = scaler.fit(data)
+        self.df_mean = data.mean()
+
+    def fillMissingColumns(self, data: pd.DataFrame):
+        copied_data = data.copy()
+        missing_columns = set(self.scaler.feature_names_in_) - set(copied_data.columns)
+        for column in missing_columns:
+            copied_data[column] = self.df_mean[column]
+        reordered_data = copied_data[self.scaler.feature_names_in_]
+        return reordered_data
+
+    def scale(self, data: pd.DataFrame):
+        filled_data = self.fillMissingColumns(data)
+        scaled_data = self.scaler.transform(filled_data)
+
+        df_scaled = pd.DataFrame(scaled_data, columns=filled_data.columns)
+        return df_scaled[data.columns]
+
+    def inverseScale(self, data: pd.DataFrame):
+        filled_data = self.fillMissingColumns(data)
+        inverse_scaled_data = self.scaler.inverse_transform(filled_data)
+
+        df_inverse_scaled = pd.DataFrame(
+            inverse_scaled_data, columns=filled_data.columns
+        )
+        return df_inverse_scaled[data.columns]
+
+
 class TrainDataProvider:
     def __init__(self, coin, features, windowSize):
         # check if coin is valid
@@ -23,27 +54,32 @@ class TrainDataProvider:
         self.features = features
         self.windowSize = windowSize
 
-    def getDataFromFile(self):
+    def getRawDataFromFile(self):
         data = pd.read_csv(f"./data/{self.coin}.csv")
         data["Date"] = pd.to_datetime(data["Date"])
         data.index = data["Date"]
         data = data.drop(["Date"], axis=1)
         data.sort_index(ascending=True, axis=0, inplace=True)
         return data
-    
+
     def extractData(self, data: pd.DataFrame):
         return data[list(set([*self.features, *candel_columns]))]
 
+    def getDataFromFile(self) -> pd.DataFrame:
+        data = self.getRawDataFromFile()
+        data["ROC"] = ROCCalculator().fromClose(data["Close"])
+        extracted_data = self.extractData(data)
+        return extracted_data
+    
     def getXYData(self, data: pd.DataFrame):
         x_data = data[self.features].values
         y_data = data[candel_columns].values
         return x_data, y_data
 
     def scaleData(self, data: pd.DataFrame):
-        scaler = MinMaxScaler(feature_range=(0, 1))
-        scaled_data = scaler.fit_transform(data)
-        return pd.DataFrame(scaled_data, columns=data.columns)
-        
+        scaler = DataScaler(data=data)
+        scaled_data = scaler.scale(data)
+        return scaled_data
 
     def getTrainDataset(self, x_data, y_data, windowSize):
         assert x_data.ndim == 2
