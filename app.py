@@ -1,3 +1,4 @@
+import datetime
 from stock_data import getStockData, coins
 
 import dash
@@ -144,6 +145,8 @@ def update_volume_graph(coin, algorithm, price_type, start_date, end_date):
         name='Stock Price'
     )])
 
+    addPredictCandle(figure, df['Date'].max() + timedelta(1))
+
     figure.update_layout(
         title=f'Stock Price Analysis ({coin})',
         yaxis_title='Stock Price (USD)',
@@ -152,6 +155,20 @@ def update_volume_graph(coin, algorithm, price_type, start_date, end_date):
     )
 
     return figure
+
+def addPredictCandle(figure, date):
+	# Thêm cây nến mới với màu sắc khác (ví dụ: màu xanh dương)
+    new_candle = go.Candlestick(
+        x=[date],  # Ngày của cây nến mới
+        open=[63000.00],  # Giá mở cửa của cây nến mới
+        high=[68000.00],  # Giá cao nhất của cây nến mới
+        low=[61000.00],  # Giá thấp nhất của cây nến mới
+        close=[67500.00],  # Giá đóng cửa của cây nến mới
+        increasing=dict(line=dict(color='blue')),
+        decreasing=dict(line=dict(color='blue'))
+    )
+
+    figure.add_trace(new_candle)
 
 # start app
 if __name__=='__main__':
