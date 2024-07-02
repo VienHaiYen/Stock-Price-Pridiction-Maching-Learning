@@ -1,28 +1,7 @@
-from constants import features as validFeatures, coins
+from constants import features as validFeatures, coins, windowSize
 import pandas as pd
-
-
-class CoinValidator:
-    def __init__(self, validCoins=coins):
-        self.validCoins = validCoins
-
-    def isValidCoin(self, coin):
-        return coin in self.validCoins
-
-    def areValidCoins(self, coins):
-        return all([self.isValidCoin(coin) for coin in coins])
-
-
-class FeatureValidator:
-    def __init__(self, validFeatures=validFeatures):
-        self.validFeatures = validFeatures
-
-    def isValidFeature(self, feature):
-        return feature in self.validFeatures
-
-    def areValidFeatures(self, features):
-        return all([self.isValidFeature(feature) for feature in features])
-
+from model.train_data import TrainDataProvider
+from model.utils import CoinValidator, FeatureValidator
 
 class Model:
     def __init__(self, modelName, features, coin):
@@ -63,13 +42,15 @@ class ModelLoader:
 
 
 class ModelPredictService:
-    def __init__(self, model: Model, modelLoadder: ModelLoader):
+    def __init__(self, model: Model):
         self.model = model
         self.inputExtractor = ModelInputExtractor(model)
         self.inputValidator = ModelInputValidator(model)
-        self.modelLoader = modelLoadder
+        self.scaler = TrainDataProvider(
+            coin=model.coin, features=model.features, windowSize=windowSize
+        ).scaler
 
-    def predict(self, loaded_model, data: pd.DataFrame):
+    def predict(self, data: pd.DataFrame) -> pd.DataFrame:
         print(f"Predicting with {self.model.modelName} on data: {data}")
         raise NotImplementedError("Subclasses must implement abstract method")
 
@@ -77,25 +58,40 @@ class ModelPredictService:
         if not self.inputValidator.isValidInput(data):
             raise ValueError("Invalid input")
         data = self.inputExtractor.extractData(data)
-        model = self.modelLoader.loadModel()
-        return self.predict(model, data)
+        data = self.scaler.scale(data)
+        x_data = data.values.reshape(1, data.shape[0], data.shape[1])
+        df_prediction = self.predict(x_data)
+        inverseScaled_output_data = self.scaler.inverseScale(df_prediction)
+        return inverseScaled_output_data
+    
+class SavedModelPredictService(ModelPredictService):
+    def __init__(self, model: Model, modelLoader: ModelLoader):
+        super().__init__(model)
+        self.modelLoader = modelLoader
 
+    def predictWithLoadedModel(self, loaded_model, data: pd.DataFrame) -> pd.DataFrame:
+        raise NotImplementedError("Subclasses must implement abstract method")
+
+    def predict(self, data: pd.DataFrame):
+        loaded_model = self.modelLoader.loadModel()
+        return self.predictWithLoadedModel(loaded_model, data)
 
 class ModelFileService:
-    def getModelFileDirectory(self):
+    def __init__(self, model: Model):
+        self.model = model
+
+    @staticmethod
+    def getModelFileDirectory():
         return "./model/built_models"
 
-    def getModelFileName(self, model: Model):
-        return f"./model/built_models/{model.modelName}_{model.coin}_{'_'.join(model.features)}.keras"
+    def getModelFileName(self):
+        return f"./model/built_models/{self.model.modelName}_{self.model.coin}_{'_'.join(self.model.features)}.keras"
 
 
 class ModelBuilder:
     def __init__(self, model: Model):
         self.model = model
-        self.modelFileService = ModelFileService()
-
-    def getModelFileName(self):
-        return self.modelFileService.getModelFileName(self.model)
+        self.modelFileService = ModelFileService(model=model)
 
     def buildModel(self):
         raise NotImplementedError("Subclasses must implement abstract method")

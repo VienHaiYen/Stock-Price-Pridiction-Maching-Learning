@@ -10,7 +10,7 @@ class ModelsInitializer:
         self.features = features
         self.coins = coins
         self.models = [LSTMModelBuilder]
-        self.modelFileService = ModelFileService()
+        self.modelFileDirectory = ModelFileService.getModelFileDirectory()
 
     def getFeaturesCombination(self):
         results = []
@@ -20,7 +20,7 @@ class ModelsInitializer:
         return results
 
     def clearOldModelFiles(self):
-        path = self.modelFileService.getModelFileDirectory()
+        path = self.modelFileDirectory
         for file in os.listdir(path):
             file_path = os.path.join(path, file)
             os.remove(file_path)

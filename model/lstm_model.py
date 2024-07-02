@@ -1,32 +1,19 @@
 from model.base import (
-    ModelPredictService,
-    ModelLoader,
+    SavedModelPredictService,
     Model,
     ModelBuilder,
-    ModelFileService,
 )
-from model.train_data import TrainDataProvider, DataScaler
+from model.train_data import TrainDataProvider
 from constants import windowSize, lstm_units, candel_columns
-from tensorflow.keras.models import Sequential, load_model
+from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import LSTM, Dense, Input
+from model.loader import KerasModelLoader
 import pandas as pd
 
 
 class LSTMModel(Model):
     def __init__(self, features, coin):
         super().__init__("LSTM", features, coin)
-
-
-class LSTMModelLoader(ModelLoader):
-    def __init__(self, model: Model):
-        lstmModel = LSTMModel(model.features, model.coin)
-        super().__init__(lstmModel)
-        self.modelFileService = ModelFileService()
-
-    def loadModel(self):
-        filePath = self.modelFileService.getModelFileName(self.model)
-        return load_model(filePath)
-
 
 class LSTMModelBuilder(ModelBuilder):
     def __init__(self, model: Model):
@@ -51,20 +38,14 @@ class LSTMModelBuilder(ModelBuilder):
         model.add(Dense(units=y_train.shape[1]))
         model.compile(optimizer="adam", loss="mean_squared_error")
         model.fit(x_train, y_train, epochs=1, batch_size=1, verbose=2)
-        model.save(self.getModelFileName())
+        model.save(self.modelFileService.getModelFileName())
 
 
-class LSTMModelPredictService(ModelPredictService):
+class LSTMModelPredictService(SavedModelPredictService):
     def __init__(self, model: LSTMModel):
-        super().__init__(model, LSTMModelLoader(model))
-        dataProvider = TrainDataProvider(
-            coin=model.coin, features=model.features, windowSize=windowSize
-        )
-        self.scaler = DataScaler(data=dataProvider.getDataFromFile())
+        super().__init__(model, KerasModelLoader(model))
 
-    def predict(self,loaded_model, data: pd.DataFrame):
-        data = self.scaler.scale(data)
-        x_data = data.values.reshape(1, data.shape[0], data.shape[1])
-        prediction = loaded_model.predict(x_data) # shape (1, 4)
+    def predictWithLoadedModel(self, loaded_model, data: pd.DataFrame):
+        prediction = loaded_model.predict(data)
         df_prediction = pd.DataFrame(prediction, columns=candel_columns)
-        return self.scaler.inverseScale(df_prediction)
+        return df_prediction
