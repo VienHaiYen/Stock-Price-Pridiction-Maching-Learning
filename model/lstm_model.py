@@ -2,8 +2,9 @@ from model.base import (
     SavedModelPredictService,
     Model,
     ModelBuilder,
+    WindowedModelInputValidator,
 )
-from model.train_data import TrainDataProvider
+from model.train_data import WindowedTrainDataProvider
 from constants import windowSize, lstm_units, candel_columns
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import LSTM, Dense, Input
@@ -15,10 +16,11 @@ class LSTMModel(Model):
     def __init__(self, features, coin):
         super().__init__("LSTM", features, coin)
 
+
 class LSTMModelBuilder(ModelBuilder):
     def __init__(self, model: Model):
         super().__init__(LSTMModel(model.features, model.coin))
-        self.dataProvider = TrainDataProvider(
+        self.dataProvider = WindowedTrainDataProvider(
             coin=model.coin, features=model.features, windowSize=windowSize
         )
 
@@ -43,9 +45,14 @@ class LSTMModelBuilder(ModelBuilder):
 
 class LSTMModelPredictService(SavedModelPredictService):
     def __init__(self, model: LSTMModel):
-        super().__init__(model, KerasModelLoader(model))
+        super().__init__(
+            model=model,
+            modelLoader=KerasModelLoader(model),
+            inputValidator=WindowedModelInputValidator(model),
+        )
 
-    def predictWithLoadedModel(self, loaded_model, data: pd.DataFrame):
+    def predictWithLoadedModel(self, loaded_model, data: pd.DataFrame) -> pd.DataFrame:
+        data = data.values.reshape(1, data.shape[0], data.shape[1])
         prediction = loaded_model.predict(data)
         df_prediction = pd.DataFrame(prediction, columns=candel_columns)
         return df_prediction

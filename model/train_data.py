@@ -4,8 +4,9 @@ from constants import candel_columns
 import numpy as np
 from model.utils import DataScaler, ROCCalculator
 
+
 class TrainDataProvider:
-    def __init__(self, coin, features, windowSize):
+    def __init__(self, coin, features):
         # check if coin is valid
         if not CoinValidator().isValidCoin(coin):
             raise ValueError(f"Invalid coin: {coin}")
@@ -14,7 +15,7 @@ class TrainDataProvider:
         if not FeatureValidator().areValidFeatures(features):
             raise ValueError(f"Invalid features: {features}")
         self.features = features
-        self.windowSize = windowSize
+        self.features.sort()
         self.rocCalculator = ROCCalculator()
         self.scaler = DataScaler(data=self.getDataFromFile())
 
@@ -27,14 +28,16 @@ class TrainDataProvider:
         return data
 
     def extractData(self, data: pd.DataFrame):
-        return data[list(set([*self.features, *candel_columns]))]
+        features = list(set([*self.features, *candel_columns]))
+        features.sort()
+        return data[features]
 
     def getDataFromFile(self) -> pd.DataFrame:
         data = self.getRawDataFromFile()
         data["ROC"] = self.rocCalculator.fromClose(data["Close"])
         extracted_data = self.extractData(data)
         return extracted_data
-    
+
     def getXYData(self, data: pd.DataFrame):
         x_data = data[self.features].values
         y_data = data[candel_columns].values
@@ -44,7 +47,19 @@ class TrainDataProvider:
         scaled_data = self.scaler.scale(data)
         return scaled_data
 
-    def getTrainDataset(self, x_data, y_data, windowSize):
+    def getTrainData(self):
+        data = self.getDataFromFile()
+        scaled_data = self.scaleData(data)
+        x_data, y_data = self.getXYData(scaled_data)
+        return x_data, y_data
+
+
+class WindowedTrainDataProvider(TrainDataProvider):
+    def __init__(self, coin, features, windowSize):
+        super().__init__(coin, features)
+        self.windowSize = windowSize
+
+    def getWindowedTrainData(self, x_data, y_data, windowSize):
         assert x_data.ndim == 2
         assert isinstance(x_data, np.ndarray)
         assert len(x_data) == len(y_data)
@@ -59,10 +74,9 @@ class TrainDataProvider:
         return X, Y
 
     def getTrainData(self):
-        # get data
-        data = self.getDataFromFile()
-        scaled_data = self.scaleData(data)
-        x_data, y_data = self.getXYData(scaled_data)
-        x_train, y_train = self.getTrainDataset(x_data, y_data, self.windowSize)
+        x_train, y_train = super().getTrainData()
+        x_windowed_train, y_windowed_train = self.getWindowedTrainData(
+            x_train, y_train, self.windowSize
+        )
 
-        return x_train, y_train
+        return x_windowed_train, y_windowed_train

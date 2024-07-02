@@ -2,6 +2,8 @@ from constants import features as validFeatures, coins, windowSize
 import pandas as pd
 from model.train_data import TrainDataProvider
 from model.utils import CoinValidator, FeatureValidator
+import numpy as np
+
 
 class Model:
     def __init__(self, modelName, features, coin):
@@ -10,6 +12,7 @@ class Model:
         if not FeatureValidator().areValidFeatures(features):
             raise ValueError(f"Invalid features: {features}")
         self.features = features
+        self.features.sort()
 
         if not CoinValidator().isValidCoin(coin):
             raise ValueError(f"Invalid coin: {coin}")
@@ -31,15 +34,29 @@ class ModelInputValidator:
 
     def areValidFeatures(self, features):
         return self.featureValidator.areValidFeatures(features)
-    
-    def hasValidRows(self, data):
-        return data.shape[0] == windowSize
 
     def isValidInput(self, data):
         assert isinstance(data, pd.DataFrame)
-        return self.areValidFeatures(data.columns) and self.hasValidRows(data)
+        return self.areValidFeatures(data.columns)
 
 
+class WindowedModelInputValidator(ModelInputValidator):
+    def __init__(self, model: Model, windowSize=windowSize):
+        super().__init__(model)
+        self.windowSize = windowSize
+
+    def hasValidRows(self, data):
+        return data.shape[0] == self.windowSize
+
+    def isValidInput(self, data):
+        return super().isValidInput(data) and self.hasValidRows(data)
+
+class XGBModelInputValidator(ModelInputValidator):
+    def __init__(self, model: Model):
+        super().__init__(model)
+
+    def isValidInput(self, data):
+        return super().isValidInput(data) and data.shape[0] == 1
 class ModelLoader:
     def __init__(self, model: Model):
         self.model = model
@@ -49,39 +66,45 @@ class ModelLoader:
 
 
 class ModelPredictService:
-    def __init__(self, model: Model):
+    def __init__(self, model: Model, inputExtractor=None, inputValidator=None):
         self.model = model
-        self.inputExtractor = ModelInputExtractor(model)
-        self.inputValidator = ModelInputValidator(model)
-        self.scaler = TrainDataProvider(
-            coin=model.coin, features=model.features, windowSize=windowSize
-        ).scaler
+        self.inputExtractor = inputExtractor or ModelInputExtractor(model)
+        self.inputValidator = inputValidator or ModelInputValidator(model)
+        self.scaler = TrainDataProvider(coin=model.coin, features=model.features).scaler
 
     def predict(self, data: pd.DataFrame) -> pd.DataFrame:
         print(f"Predicting with {self.model.modelName} on data: {data}")
         raise NotImplementedError("Subclasses must implement abstract method")
 
-    def execute(self, data):
+    def execute(self, data: pd.DataFrame) -> pd.DataFrame:
         if not self.inputValidator.isValidInput(data):
             raise ValueError("Invalid input")
         data = self.inputExtractor.extractData(data)
         data = self.scaler.scale(data)
-        x_data = data.values.reshape(1, data.shape[0], data.shape[1])
-        df_prediction = self.predict(x_data)
+        # x_data = data.values.reshape(1, data.shape[0], data.shape[1])
+        df_prediction = self.predict(data)
         inverseScaled_output_data = self.scaler.inverseScale(df_prediction)
         return inverseScaled_output_data
-    
+
+
 class SavedModelPredictService(ModelPredictService):
-    def __init__(self, model: Model, modelLoader: ModelLoader):
-        super().__init__(model)
+    def __init__(
+        self,
+        model: Model,
+        modelLoader: ModelLoader,
+        inputExtractor=None,
+        inputValidator=None,
+    ):
+        super().__init__(model, inputExtractor, inputValidator)
         self.modelLoader = modelLoader
 
     def predictWithLoadedModel(self, loaded_model, data: pd.DataFrame) -> pd.DataFrame:
         raise NotImplementedError("Subclasses must implement abstract method")
 
-    def predict(self, data: pd.DataFrame):
+    def predict(self, data: pd.DataFrame) -> pd.DataFrame:
         loaded_model = self.modelLoader.loadModel()
         return self.predictWithLoadedModel(loaded_model, data)
+
 
 class ModelFileService:
     def __init__(self, model: Model):

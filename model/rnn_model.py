@@ -1,10 +1,16 @@
-from model.base import Model, ModelBuilder, SavedModelPredictService
-from model.train_data import TrainDataProvider
+from model.base import (
+    Model,
+    ModelBuilder,
+    SavedModelPredictService,
+    WindowedModelInputValidator,
+)
+from model.train_data import WindowedTrainDataProvider
 from model.loader import KerasModelLoader
 from constants import windowSize, simple_rnn_units, candel_columns
 import pandas as pd
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import SimpleRNN, Dense, Input
+
 
 class RNNModel(Model):
     def __init__(self, features, coin):
@@ -14,7 +20,7 @@ class RNNModel(Model):
 class RNNModelBuilder(ModelBuilder):
     def __init__(self, model: Model):
         super().__init__(RNNModel(model.features, model.coin))
-        self.dataProvider = TrainDataProvider(
+        self.dataProvider = WindowedTrainDataProvider(
             coin=model.coin, features=model.features, windowSize=windowSize
         )
 
@@ -35,12 +41,18 @@ class RNNModelBuilder(ModelBuilder):
         model.compile(optimizer="adam", loss="mean_squared_error")
         model.fit(x_train, y_train, epochs=1, batch_size=1, verbose=2)
         model.save(self.modelFileService.getModelFileName())
-    
+
+
 class RNNModelPredictService(SavedModelPredictService):
     def __init__(self, model: RNNModel):
-        super().__init__(model, KerasModelLoader(model))
+        super().__init__(
+            model=model,
+            modelLoader=KerasModelLoader(model),
+            inputValidator=WindowedModelInputValidator(model),
+        )
 
-    def predictWithLoadedModel(self, loaded_model, data: pd.DataFrame):
+    def predictWithLoadedModel(self, loaded_model, data: pd.DataFrame) -> pd.DataFrame:
+        data = data.values.reshape(1, data.shape[0], data.shape[1])
         prediction = loaded_model.predict(data)
         df_prediction = pd.DataFrame(prediction, columns=candel_columns)
         return df_prediction
