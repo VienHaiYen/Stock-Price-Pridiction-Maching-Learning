@@ -1,4 +1,5 @@
 from model.lstm_model import LSTMModelBuilder
+from model.rnn_model import RNNModelBuilder
 from model.base import Model, ModelFileService
 from constants import coins, features
 from itertools import combinations
@@ -9,7 +10,7 @@ class ModelsInitializer:
     def __init__(self, features=features, coins=coins):
         self.features = features
         self.coins = coins
-        self.models = [LSTMModelBuilder]
+        self.models = [LSTMModelBuilder, RNNModelBuilder]
         self.modelFileDirectory = ModelFileService.getModelFileDirectory()
 
     def getFeaturesCombination(self):

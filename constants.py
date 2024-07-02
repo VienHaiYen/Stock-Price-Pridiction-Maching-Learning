@@ -6,3 +6,4 @@ coins = [
 ]
 candel_columns = ['Open', 'High', 'Low', 'Close']
 lstm_units = 50
+simple_rnn_units = 50
