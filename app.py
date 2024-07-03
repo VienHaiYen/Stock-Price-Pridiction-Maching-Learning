@@ -1,4 +1,4 @@
-from trading_data import getTradeData
+from trading_data import getTradeData, getTradeDataByMinute
 
 import dash
 from dash import dcc
@@ -30,7 +30,7 @@ app.layout = html.Div(
     #header
     html.Div(
               children=[
-								html.Span("Trading Price Analysis"),
+                html.Span("Trading Price Analysis"),
                 html.Span("Team 3")
               ],
               style={
@@ -93,13 +93,13 @@ app.layout = html.Div(
             multi=True,
             id='price-type-dropdown',
             options=[
-                {'label': 'Open Price', 'value': 'Open'},
+                # {'label': 'Open Price', 'value': 'Open'},
                 {'label': 'Close Price', 'value': 'Close'},
-                {'label': 'Low Price', 'value': 'Low'},
-                {'label': 'High Price', 'value': 'High'},
+                # {'label': 'Low Price', 'value': 'Low'},
+                # {'label': 'High Price', 'value': 'High'},
                 {'label': 'ROC', 'value': 'ROC'},
             ],
-            value=['Open', 'Close', 'Low', 'High', 'ROC'],
+            value=['Close', 'ROC'],
             clearable=False,
 						style={"width": "auto", 'min-width': '200px'}
             ),
@@ -119,6 +119,9 @@ app.layout = html.Div(
         ],
         style={"border": "solid 1px gray", "marginTop": "10px"}  
     ),
+	dcc.Interval(id='interval-component', 
+                 interval=20 * 1000, 
+                 n_intervals=0)
 ])
 
 # TRADING PRICE
@@ -129,12 +132,16 @@ app.layout = html.Div(
         Input('algorithm-dropdown', 'value'),
         Input('price-type-dropdown', 'value'),
         Input('start-date', 'date'),
-        Input('end-date', 'date')
+        Input('end-date', 'date'),
+		Input('interval-component', 'n_intervals')
     ]
 )
-def update_trading_price_graph(coin, algorithm, price_type, start_date, end_date):
+def update_trading_price_graph(coin, algorithm, price_type, start_date, end_date, n_intervals):
     # Đọc dữ liệu dựa trên coin được chọn theo ngày
     df = getTradeData(coin, start_date, end_date)
+    # real_time = getTradeDataByMinute(coin)
+    # df.append(real_time)
+	
     df['Date'] = df.index
 
     # Tạo biểu đồ nến
@@ -147,15 +154,10 @@ def update_trading_price_graph(coin, algorithm, price_type, start_date, end_date
         close=df['Close'],
         name='Trading Price'
 			),
-				# go.Line(
-				# 		x=df['Date'],
-				# 		y=df['Volume'],
-				# 		name='Trading Volume',
-				# 		yaxis='y2'
-				# )
 		])
 
-    addPredictCandle(figure, df['Date'].max() + timedelta(1))
+    # Thêm dự đoán vào biểu đồ
+    # addPredictCandle(figure, df['Date'].max() + timedelta(1))
 
     figure.update_layout(
         title=f'Trading Price Analysis ({coin})',

@@ -13,4 +13,9 @@ def getTradeDataToNow(coin, days):
 
   return data
 
+def getTradeDataByMinute(coin):
+  data = yf.download(coin, start= date.today(), interval='1m')
+  print(data)
+  return data
 
+# getTradeDataByMinute('ETH-USD')
