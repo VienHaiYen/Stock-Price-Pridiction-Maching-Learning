@@ -18,6 +18,7 @@ coins = ["BTC-USD", "ETH-USD",
      "BNB-USD", "ADA-USD", "XRP-USD",
      "SOL-USD", "DOT-USD", "DOGE-USD", "SHIB-USD", "LTC-USD"
       ]
+day_number = [10, 20, 30, 60, 120]
 
 # initialize
 app = dash.Dash()
@@ -35,7 +36,7 @@ app.layout = html.Div(
               ],
               style={
                   'display': 'flex',
-                  'justify-content': 'space-between',
+                  'justifyContent': 'space-between',
                   'backgroundColor': 'black',
                   'color': 'white',
                   'padding': '12px 20px',
@@ -45,7 +46,7 @@ app.layout = html.Div(
           ),
 
     # tool bar
-		html.Div(
+    html.Div(
       style={'padding': '12px 20px',},
 			children=[
 				html.Div(
@@ -64,28 +65,13 @@ app.layout = html.Div(
                 clearable=False,
                 style={"width": "200px"}),
 
-            html.H5("Start Date:",style={"margin-left": "20px"}),
-            dcc.DatePickerSingle(
-                id='start-date',
-                min_date_allowed=date(2018, 1, 1),
-                max_date_allowed=date.today(),
-                initial_visible_month=date(2020, 1, 1),
-                date=date.today() - timedelta(days=365*5),
+            html.H5("Number of days:",style={"marginLeft": "20px"}),
+            dcc.Dropdown(
+                id='day-number',
+                options=day_number,
+                value=60,
                 clearable=False,
-                display_format="DD/MM/YYYY",
-                day_size=30
-            ),
-
-            html.H5("End Date:"),
-            dcc.DatePickerSingle(
-                id='end-date',
-                min_date_allowed=date(2018, 1, 1),
-                max_date_allowed=date.today(),
-                initial_visible_month=date.today(),
-                date=date.today(),
-                clearable=False,
-                display_format="DD/MM/YYYY",
-                day_size=30
+                style={"width": "200px"},
             ),
         ]),
         dcc.Dropdown(
@@ -111,16 +97,16 @@ app.layout = html.Div(
     # graph presentation
     html.Div(
         children = [
-            dcc.Loading(
+            # dcc.Loading(
                 dcc.Graph(
                     id='candlestick-graph',
                 )
-            ),
+            # ),
         ],
         style={"border": "solid 1px gray", "marginTop": "10px"}  
     ),
 	dcc.Interval(id='interval-component', 
-                 interval=20 * 1000, 
+                 interval=2 * 1000, 
                  n_intervals=0)
 ])
 
@@ -131,18 +117,25 @@ app.layout = html.Div(
         Input('coin-dropdown', 'value'),
         Input('algorithm-dropdown', 'value'),
         Input('price-type-dropdown', 'value'),
-        Input('start-date', 'date'),
-        Input('end-date', 'date'),
+        Input('day-number', 'value'),
 		Input('interval-component', 'n_intervals')
     ]
 )
-def update_trading_price_graph(coin, algorithm, price_type, start_date, end_date, n_intervals):
+def update_trading_price_graph(coin, algorithm, price_type, day_number, n_intervals):
     # Đọc dữ liệu dựa trên coin được chọn theo ngày
-    df = getTradeData(coin, start_date, end_date)
-    # real_time = getTradeDataByMinute(coin)
-    # df.append(real_time)
-	
+    df = getTradeData(coin, date.today() - timedelta(day_number), date.today())
+    new_row = getTradeDataByMinute(coin)
+
     df['Date'] = df.index
+    new_row['Date'] = new_row.index
+
+    df['Date'] = df['Date'].apply(lambda x: x.date())
+    new_row['Date'] = new_row['Date']
+
+    if df['Date'].max() != new_row['Date'].max():
+        df = pd.concat([df, new_row], ignore_index=True)
+    else:
+        df.iloc[-1] = new_row
 
     # Tạo biểu đồ nến
     figure = go.Figure(data=[
@@ -155,9 +148,8 @@ def update_trading_price_graph(coin, algorithm, price_type, start_date, end_date
         name='Trading Price'
 			),
 		])
-
     # Thêm dự đoán vào biểu đồ
-    # addPredictCandle(figure, df['Date'].max() + timedelta(1))
+    addPredictCandle(figure, df['Date'].max() + timedelta(1))
 
     figure.update_layout(
         title=f'Trading Price Analysis ({coin})',
