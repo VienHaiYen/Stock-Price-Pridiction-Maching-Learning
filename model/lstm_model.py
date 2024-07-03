@@ -5,7 +5,7 @@ from model.base import (
     WindowedModelInputValidator,
     KerasModelFileService,
 )
-from model.train_data import WindowedTrainDataProvider
+from model.train_data import TrainDataProvider
 from constants import windowSize, lstm_units, candel_columns
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import LSTM, Dense, Input
@@ -22,10 +22,9 @@ class LSTMModelBuilder(ModelBuilder):
     def __init__(self, model: Model):
         lstmModel = LSTMModel(model.features, model.coin)
         super().__init__(
-            model=lstmModel,
-            modelFileService=KerasModelFileService(model=lstmModel)
+            model=lstmModel, modelFileService=KerasModelFileService(model=lstmModel)
         )
-        self.dataProvider = WindowedTrainDataProvider(
+        self.dataProvider = TrainDataProvider(
             coin=model.coin, features=model.features, windowSize=windowSize
         )
 

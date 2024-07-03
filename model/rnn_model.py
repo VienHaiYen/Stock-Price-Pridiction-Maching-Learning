@@ -5,7 +5,7 @@ from model.base import (
     WindowedModelInputValidator,
     KerasModelFileService,
 )
-from model.train_data import WindowedTrainDataProvider
+from model.train_data import TrainDataProvider
 from model.loader import KerasModelLoader
 from constants import windowSize, simple_rnn_units, candel_columns
 import pandas as pd
@@ -25,7 +25,7 @@ class RNNModelBuilder(ModelBuilder):
             model=rnnModel,
             modelFileService=KerasModelFileService(model=rnnModel),
         )
-        self.dataProvider = WindowedTrainDataProvider(
+        self.dataProvider = TrainDataProvider(
             coin=model.coin, features=model.features, windowSize=windowSize
         )
 

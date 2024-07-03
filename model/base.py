@@ -50,12 +50,15 @@ class WindowedModelInputValidator(ModelInputValidator):
     def isValidInput(self, data):
         return super().isValidInput(data) and self.hasValidRows(data)
 
+
 class XGBModelInputValidator(ModelInputValidator):
     def __init__(self, model: Model):
         super().__init__(model)
 
     def isValidInput(self, data):
         return super().isValidInput(data) and data.shape[0] == 1
+
+
 class ModelLoader:
     def __init__(self, model: Model):
         self.model = model
@@ -69,7 +72,9 @@ class ModelPredictService:
         self.model = model
         self.inputExtractor = inputExtractor or ModelInputExtractor(model)
         self.inputValidator = inputValidator or ModelInputValidator(model)
-        self.scaler = TrainDataProvider(coin=model.coin, features=model.features).scaler
+        self.scaler = TrainDataProvider(
+            coin=model.coin, features=model.features, windowSize=windowSize
+        ).scaler
 
     def predict(self, data: pd.DataFrame) -> pd.DataFrame:
         print(f"Predicting with {self.model.modelName} on data: {data}")
@@ -117,12 +122,16 @@ class ModelFileService:
     def getModelFileName(self):
         return f"./model/built_models/{self.model.modelName}_{self.model.coin}_{'_'.join(self.model.features)}.{self.extenstion}"
 
+
 class KerasModelFileService(ModelFileService):
     def __init__(self, model: Model):
         super().__init__(model, "keras")
+
+
 class XGBModelFileService(ModelFileService):
     def __init__(self, model: Model):
         super().__init__(model, "json")
+
 
 class ModelBuilder:
     def __init__(self, model: Model, modelFileService: ModelFileService):

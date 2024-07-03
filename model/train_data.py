@@ -6,7 +6,8 @@ from model.utils import DataScaler, ROCCalculator
 
 
 class TrainDataProvider:
-    def __init__(self, coin, features):
+    def __init__(self, coin, features, windowSize):
+        self.windowSize = windowSize
         # check if coin is valid
         if not CoinValidator().isValidCoin(coin):
             raise ValueError(f"Invalid coin: {coin}")
@@ -47,18 +48,6 @@ class TrainDataProvider:
         scaled_data = self.scaler.scale(data)
         return scaled_data
 
-    def getTrainData(self):
-        data = self.getDataFromFile()
-        scaled_data = self.scaleData(data)
-        x_data, y_data = self.getXYData(scaled_data)
-        return x_data, y_data
-
-
-class WindowedTrainDataProvider(TrainDataProvider):
-    def __init__(self, coin, features, windowSize):
-        super().__init__(coin, features)
-        self.windowSize = windowSize
-
     def getWindowedTrainData(self, x_data, y_data, windowSize):
         assert x_data.ndim == 2
         assert isinstance(x_data, np.ndarray)
@@ -74,9 +63,11 @@ class WindowedTrainDataProvider(TrainDataProvider):
         return X, Y
 
     def getTrainData(self):
-        x_train, y_train = super().getTrainData()
+        data = self.getDataFromFile()
+        scaled_data = self.scaleData(data)
+        x_data, y_data = self.getXYData(scaled_data)
         x_windowed_train, y_windowed_train = self.getWindowedTrainData(
-            x_train, y_train, self.windowSize
+            x_data, y_data, self.windowSize
         )
 
         return x_windowed_train, y_windowed_train
