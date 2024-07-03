@@ -2,7 +2,6 @@ from constants import features as validFeatures, coins, windowSize
 import pandas as pd
 from model.train_data import TrainDataProvider
 from model.utils import CoinValidator, FeatureValidator
-import numpy as np
 
 
 class Model:
@@ -107,21 +106,28 @@ class SavedModelPredictService(ModelPredictService):
 
 
 class ModelFileService:
-    def __init__(self, model: Model):
+    def __init__(self, model: Model, extenstion):
         self.model = model
+        self.extenstion = extenstion
 
     @staticmethod
     def getModelFileDirectory():
         return "./model/built_models"
 
     def getModelFileName(self):
-        return f"./model/built_models/{self.model.modelName}_{self.model.coin}_{'_'.join(self.model.features)}.keras"
+        return f"./model/built_models/{self.model.modelName}_{self.model.coin}_{'_'.join(self.model.features)}.{self.extenstion}"
 
+class KerasModelFileService(ModelFileService):
+    def __init__(self, model: Model):
+        super().__init__(model, "keras")
+class XGBModelFileService(ModelFileService):
+    def __init__(self, model: Model):
+        super().__init__(model, "json")
 
 class ModelBuilder:
-    def __init__(self, model: Model):
+    def __init__(self, model: Model, modelFileService: ModelFileService):
         self.model = model
-        self.modelFileService = ModelFileService(model=model)
+        self.modelFileService = modelFileService
 
     def buildModel(self):
         raise NotImplementedError("Subclasses must implement abstract method")

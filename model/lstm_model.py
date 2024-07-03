@@ -3,6 +3,7 @@ from model.base import (
     Model,
     ModelBuilder,
     WindowedModelInputValidator,
+    KerasModelFileService,
 )
 from model.train_data import WindowedTrainDataProvider
 from constants import windowSize, lstm_units, candel_columns
@@ -19,7 +20,11 @@ class LSTMModel(Model):
 
 class LSTMModelBuilder(ModelBuilder):
     def __init__(self, model: Model):
-        super().__init__(LSTMModel(model.features, model.coin))
+        lstmModel = LSTMModel(model.features, model.coin)
+        super().__init__(
+            model=lstmModel,
+            modelFileService=KerasModelFileService(model=lstmModel)
+        )
         self.dataProvider = WindowedTrainDataProvider(
             coin=model.coin, features=model.features, windowSize=windowSize
         )

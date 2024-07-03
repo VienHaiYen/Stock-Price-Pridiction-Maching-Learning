@@ -3,6 +3,7 @@ from model.base import (
     ModelBuilder,
     SavedModelPredictService,
     WindowedModelInputValidator,
+    KerasModelFileService,
 )
 from model.train_data import WindowedTrainDataProvider
 from model.loader import KerasModelLoader
@@ -19,7 +20,11 @@ class RNNModel(Model):
 
 class RNNModelBuilder(ModelBuilder):
     def __init__(self, model: Model):
-        super().__init__(RNNModel(model.features, model.coin))
+        rnnModel = RNNModel(model.features, model.coin)
+        super().__init__(
+            model=rnnModel,
+            modelFileService=KerasModelFileService(model=rnnModel),
+        )
         self.dataProvider = WindowedTrainDataProvider(
             coin=model.coin, features=model.features, windowSize=windowSize
         )

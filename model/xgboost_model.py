@@ -3,6 +3,7 @@ from model.base import (
     ModelBuilder,
     SavedModelPredictService,
     XGBModelInputValidator,
+    XGBModelFileService,
 )
 from model.train_data import TrainDataProvider
 from model.loader import XGBModelLoader
@@ -18,7 +19,11 @@ class XGBModel(Model):
 
 class XGBModelBuilder(ModelBuilder):
     def __init__(self, model: Model):
-        super().__init__(XGBModel(model.features, model.coin))
+        xgbModel = XGBModel(model.features, model.coin)
+        super().__init__(
+            model=xgbModel,
+            modelFileService=XGBModelFileService(model=xgbModel),
+        )
         self.dataProvider = TrainDataProvider(coin=model.coin, features=model.features)
 
     def buildModel(self):
