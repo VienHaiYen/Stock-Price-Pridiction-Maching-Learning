@@ -19,11 +19,14 @@ class Model:
 
 
 class ModelInputExtractor:
-    def __init__(self, model: Model):
+    def __init__(self, model: Model, windowSize=windowSize):
         self.model = model
+        self.windowSize = windowSize
 
     def extractData(self, data):
-        return data[self.model.features]
+        data = data[self.model.features]
+        data = data[-self.windowSize:]
+        return data
 
 
 class ModelInputValidator:
@@ -45,18 +48,10 @@ class WindowedModelInputValidator(ModelInputValidator):
         self.windowSize = windowSize
 
     def hasValidRows(self, data):
-        return data.shape[0] == self.windowSize
+        return data.shape[0] >= self.windowSize
 
     def isValidInput(self, data):
         return super().isValidInput(data) and self.hasValidRows(data)
-
-
-class XGBModelInputValidator(ModelInputValidator):
-    def __init__(self, model: Model):
-        super().__init__(model)
-
-    def isValidInput(self, data):
-        return super().isValidInput(data) and data.shape[0] == 1
 
 
 class ModelLoader:

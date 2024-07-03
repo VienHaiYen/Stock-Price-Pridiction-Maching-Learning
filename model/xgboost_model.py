@@ -2,7 +2,8 @@ from model.base import (
     Model,
     ModelBuilder,
     SavedModelPredictService,
-    XGBModelInputValidator,
+    WindowedModelInputValidator,
+    ModelInputExtractor,
     XGBModelFileService,
 )
 from model.train_data import TrainDataProvider
@@ -46,7 +47,8 @@ class XGBModelPredictService(SavedModelPredictService):
         super().__init__(
             model=model,
             modelLoader=XGBModelLoader(model),
-            inputValidator=XGBModelInputValidator(model),
+            inputExtractor=ModelInputExtractor(model=model, windowSize=1),
+            inputValidator=WindowedModelInputValidator(model=model, windowSize=1),
         )
 
     def predictWithLoadedModel(self, loaded_model, data: pd.DataFrame) -> pd.DataFrame:
