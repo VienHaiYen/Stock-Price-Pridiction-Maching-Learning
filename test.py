@@ -24,7 +24,7 @@ def create_dropdown(option, id_value):
 app.layout = html.Div([
 
     html.Div([
-        create_dropdown(["btcusd","ethusd","xrpusd"], "coin-select"),
+        create_dropdown(["btcusd", "ethusd", "xrpusd", "ltcusd", "bnbusd", "adausd", "dotusd", "solusd", "linkusd", "maticusd", "dogeusd"], "coin-select"),
         create_dropdown(["60","3600","86400"], "timeframe-select"),
         create_dropdown(["20","50","100"], "num-bars-select"),
         ], style = {"display":"flex", "margin":"auto", "width":"800px",

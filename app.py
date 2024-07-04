@@ -1,5 +1,4 @@
-from trading_data import getTradeData, getTradeDataByMinute
-
+import requests
 import dash
 from dash import dcc
 from dash import html
@@ -7,6 +6,8 @@ import plotly.graph_objs as go
 from dash.dependencies import Input, Output
 from datetime import date, timedelta
 import pandas as pd
+import pandas_ta as ta
+
 
 # getAllDataToCSV()
 algorithms = [
@@ -18,8 +19,23 @@ coins = ["BTC-USD", "ETH-USD",
      "BNB-USD", "ADA-USD", "XRP-USD",
      "SOL-USD", "DOT-USD", "DOGE-USD", "SHIB-USD", "LTC-USD"
       ]
+_coins = [{'label': 'BTC-USD', 'value': 'btcusd'},
+    {'label': 'ETH-USD', 'value': 'ethusd'},
+    {'label': 'XRP-USD', 'value': 'xrpusd'},
+    {'label': 'LTC-USD', 'value': 'ltcusd'},
+    {'label': 'BNB-USD', 'value': 'bnbusd'},
+    {'label': 'ADA-USD', 'value': 'adausd'},
+    {'label': 'DOT-USD', 'value': 'dotusd'},
+    {'label': 'SOL-USD', 'value': 'solusd'},
+    {'label': 'LINK-USD', 'value': 'linkusd'},
+    {'label': 'MATIC-USD', 'value': 'maticusd'},
+    {'label': 'DOGE-USD', 'value': 'dogeusd'}]
 day_number = [10, 20, 30, 60, 120]
-
+timeframes = [
+    {'label': '1 phút','value': 60},
+    {'label': '1 tiếng','value': 3600},
+    {'label': '1 ngày','value': 86400},
+    ]
 # initialize
 app = dash.Dash()
 server = app.server
@@ -54,8 +70,8 @@ app.layout = html.Div(
         children=[
             dcc.Dropdown(
                 id='coin-dropdown',
-                options=coins, 
-                value='BTC-USD', 
+                options=_coins, 
+                value='btcusd', 
                 clearable=False,
                 style={"width": "200px"}),
             dcc.Dropdown(
@@ -65,11 +81,19 @@ app.layout = html.Div(
                 clearable=False,
                 style={"width": "200px"}),
 
-            html.H5("Number of days:",style={"marginLeft": "20px"}),
+            html.H5("Timeframe:",style={"marginLeft": "20px"}),
+            dcc.Dropdown(
+                id='timeframe',
+                options=timeframes,
+                value=60,
+                clearable=False,
+                style={"width": "200px"},
+            ),
+            html.H5("Number of timeframe:",style={"marginLeft": "20px"}),
             dcc.Dropdown(
                 id='day-number',
                 options=day_number,
-                value=60,
+                value=20,
                 clearable=False,
                 style={"width": "200px"},
             ),
@@ -118,38 +142,37 @@ app.layout = html.Div(
         Input('algorithm-dropdown', 'value'),
         Input('price-type-dropdown', 'value'),
         Input('day-number', 'value'),
+        Input('timeframe', 'value'),
 		Input('interval-component', 'n_intervals')
     ]
 )
-def update_trading_price_graph(coin, algorithm, price_type, day_number, n_intervals):
-    # Đọc dữ liệu dựa trên coin được chọn theo ngày
-    df = getTradeData(coin, date.today() - timedelta(day_number), date.today())
-    new_row = getTradeDataByMinute(coin)
+def update_trading_price_graph(coin, algorithm, price_type, day_number, timeframe, n_intervals):
+    # GET dữ liệu dựa trên coin được chọn theo ngày
+    url = f"https://www.bitstamp.net/api/v2/ohlc/{coin}/"
+    params = {
+            "step":timeframe,
+            "limit":int(day_number),
+            }
+    df = requests.get(url, params=params).json()["data"]["ohlc"]
 
-    df['Date'] = df.index
-    new_row['Date'] = new_row.index
+    df = pd.DataFrame(df)
+    df.timestamp = pd.to_datetime(df.timestamp, unit = "s")
 
-    df['Date'] = df['Date'].apply(lambda x: x.date())
-    new_row['Date'] = new_row['Date']
-
-    if df['Date'].max() != new_row['Date'].max():
-        df = pd.concat([df, new_row], ignore_index=True)
-    else:
-        df.iloc[-1] = new_row
+    df["rsi"] = ta.rsi(df.close.astype(float))
 
     # Tạo biểu đồ nến
-    figure = go.Figure(data=[
-			go.Candlestick(
-        x=df['Date'],
-        open=df['Open'],
-        high=df['High'],
-        low=df['Low'],
-        close=df['Close'],
-        name='Trading Price'
-			),
-		])
+    figure = go.Figure(
+                data = [
+                    go.Candlestick(
+                        x = df.timestamp,
+                        open = df.open,
+                        high = df.high,
+                        low = df.low,
+                        close = df.close
+                        )])
     # Thêm dự đoán vào biểu đồ
-    addPredictCandle(figure, df['Date'].max() + timedelta(1))
+    if(timeframe == 86400):
+        addPredictCandle(figure, df.timestamp.max() + timedelta(1))
 
     figure.update_layout(
         title=f'Trading Price Analysis ({coin})',
