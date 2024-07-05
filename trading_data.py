@@ -14,16 +14,8 @@ def getDataFromCoin(coin, timeframe, day_number):
   return df
 
 def getDataFromCoinToCSV(coin):
-  url = f"https://www.bitstamp.net/api/v2/ohlc/{coin}/"
-  params = {
-          "step":86400,
-          "limit":int(365*5),
-          }
-  df = requests.get(url, params=params).json()["data"]["ohlc"]
-  df = pd.DataFrame(df)
-  df.timestamp = pd.to_datetime(df.timestamp, unit = "s")
+  df = getDataFromCoin(coin, 86400, 1000)
   new_df = df[['timestamp', 'open', 'close', 'high', 'low']]
-
   new_df.to_csv(f'./data/{coin}.csv')
 
 def getAllDataToCSV():
