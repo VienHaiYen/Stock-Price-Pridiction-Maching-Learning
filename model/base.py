@@ -1,4 +1,4 @@
-from constants import features as validFeatures, coins, windowSize
+from constant import features as validFeatures, coins, windowSize
 import pandas as pd
 from model.train_data import TrainDataProvider
 from model.utils import CoinValidator, FeatureValidator
@@ -17,6 +17,7 @@ class Model:
             raise ValueError(f"Invalid coin: {coin}")
         self.coin = coin
 
+
 class ModelInputExtractor:
     def __init__(self, model: Model, windowSize=windowSize):
         self.model = model
@@ -24,7 +25,7 @@ class ModelInputExtractor:
 
     def extractData(self, data):
         data = data[self.model.features]
-        data = data[-self.windowSize:]
+        data = data[-self.windowSize :]
         return data
 
 

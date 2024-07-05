@@ -2,9 +2,10 @@ from model.lstm_model import LSTMModelBuilder
 from model.rnn_model import RNNModelBuilder
 from model.xgboost_model import XGBModelBuilder
 from model.base import Model, ModelFileService
-from constants import coins, features
+from constant import coins, features
 from itertools import combinations
 import os
+from trading_data import getAllDataToCSV
 
 
 class ModelsInitializer:
@@ -26,6 +27,8 @@ class ModelsInitializer:
         for file in os.listdir(path):
             file_path = os.path.join(path, file)
             os.remove(file_path)
+    def downloadTrainDataFiles(self):
+        getAllDataToCSV()
 
     def buildModels(self):
         for coin in self.coins:
@@ -38,5 +41,6 @@ class ModelsInitializer:
                     ).buildModel()
 
     def init(self):
+        self.downloadTrainDataFiles()
         self.clearOldModelFiles()
         self.buildModels()

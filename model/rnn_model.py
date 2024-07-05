@@ -7,7 +7,7 @@ from model.base import (
 )
 from model.train_data import TrainDataProvider
 from model.loader import KerasModelLoader
-from constants import windowSize, simple_rnn_units, candel_columns
+from constant import windowSize, simple_rnn_units, candel_columns
 import pandas as pd
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import SimpleRNN, Dense, Input

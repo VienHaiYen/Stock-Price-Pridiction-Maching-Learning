@@ -1,6 +1,6 @@
 from model.utils import CoinValidator, FeatureValidator
 import pandas as pd
-from constants import candel_columns
+from constant import candel_columns
 import numpy as np
 from model.utils import DataScaler, ROCCalculator
 

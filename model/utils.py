@@ -1,7 +1,8 @@
 from sklearn.preprocessing import MinMaxScaler
 import pandas as pd
-from constants import coins
-from constants import features
+from constant import coins
+from constant import features
+
 
 class DataScaler:
     def __init__(self, data: pd.DataFrame):
@@ -32,11 +33,13 @@ class DataScaler:
             inverse_scaled_data, columns=filled_data.columns
         )
         return df_inverse_scaled[data.columns]
-    
+
+
 class ROCCalculator:
     def fromClose(self, close):
         assert isinstance(close, pd.Series)
         return ((close - close.shift(1)) / close.shift(1)).fillna(0)
+
 
 class CoinValidator:
     def __init__(self, validCoins=coins):
@@ -47,6 +50,7 @@ class CoinValidator:
 
     def areValidCoins(self, coins):
         return all([self.isValidCoin(coin) for coin in coins])
+
 
 class FeatureValidator:
     def __init__(self, validFeatures=features):

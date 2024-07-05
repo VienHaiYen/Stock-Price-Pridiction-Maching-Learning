@@ -8,7 +8,7 @@ from model.base import (
 )
 from model.train_data import TrainDataProvider
 from model.loader import XGBModelLoader
-from constants import candel_columns
+from constant import candel_columns
 import pandas as pd
 from xgboost import XGBRegressor
 

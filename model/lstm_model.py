@@ -6,7 +6,7 @@ from model.base import (
     KerasModelFileService,
 )
 from model.train_data import TrainDataProvider
-from constants import windowSize, lstm_units, candel_columns
+from constant import windowSize, lstm_units, candel_columns
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import LSTM, Dense, Input
 from model.loader import KerasModelLoader
