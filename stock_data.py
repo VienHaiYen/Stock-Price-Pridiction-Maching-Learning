@@ -19,8 +19,6 @@ def getStockDataToNow(stock, days):
 
 
 def getAllDataToCSV():
-
-
   for coin in coins:
       data = getStockDataToNow(coin, 5 * 365)
       data.to_csv(f"./data/{coin}.csv")

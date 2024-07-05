@@ -1,10 +1,10 @@
-features = ["Close", "ROC"]
+features = ["close", "ROC"]
 windowSize = 50
 models = ["LSTM", "RNN", "XGB"]
 coins = [
-    "BTC-USD",
-    "ETH-USD",
+    "btcusd",
+    "ethusd",
 ]
-candel_columns = ["Open", "High", "Low", "Close"]
+candel_columns = ["open", "high", "low", "close"]
 lstm_units = 50
 simple_rnn_units = 50

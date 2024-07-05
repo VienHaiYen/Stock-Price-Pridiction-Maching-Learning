@@ -22,9 +22,9 @@ class TrainDataProvider:
 
     def getRawDataFromFile(self):
         data = pd.read_csv(f"./data/{self.coin}.csv")
-        data["Date"] = pd.to_datetime(data["Date"])
-        data.index = data["Date"]
-        data = data.drop(["Date"], axis=1)
+        data["timestamp"] = pd.to_datetime(data["timestamp"])
+        data.index = data["timestamp"]
+        data = data.drop(["timestamp"], axis=1)
         data.sort_index(ascending=True, axis=0, inplace=True)
         return data
 
@@ -35,7 +35,7 @@ class TrainDataProvider:
 
     def getDataFromFile(self) -> pd.DataFrame:
         data = self.getRawDataFromFile()
-        data["ROC"] = self.rocCalculator.fromClose(data["Close"])
+        data["ROC"] = self.rocCalculator.fromClose(data["close"])
         extracted_data = self.extractData(data)
         return extracted_data
 

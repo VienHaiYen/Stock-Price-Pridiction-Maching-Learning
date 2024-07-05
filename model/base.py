@@ -17,7 +17,6 @@ class Model:
             raise ValueError(f"Invalid coin: {coin}")
         self.coin = coin
 
-
 class ModelInputExtractor:
     def __init__(self, model: Model, windowSize=windowSize):
         self.model = model
