@@ -16,11 +16,10 @@ algorithms = [
   {'label': 'XGBoost', 'value': 'xgboost'},
 ]
 
-_coins = [{'label': 'BTC-USD', 'value': 'btcusd'},
+coins = [{'label': 'BTC-USD', 'value': 'btcusd'},
     {'label': 'ETH-USD', 'value': 'ethusd'},
     {'label': 'XRP-USD', 'value': 'xrpusd'},
     {'label': 'LTC-USD', 'value': 'ltcusd'},
-    {'label': 'BNB-USD', 'value': 'bnbusd'},
     {'label': 'ADA-USD', 'value': 'adausd'},
     {'label': 'DOT-USD', 'value': 'dotusd'},
     {'label': 'SOL-USD', 'value': 'solusd'},
@@ -67,7 +66,7 @@ app.layout = html.Div(
         children=[
             dcc.Dropdown(
                 id='coin-dropdown',
-                options=_coins, 
+                options=coins, 
                 value='btcusd', 
                 clearable=False,
                 style={"width": "200px"}),
@@ -154,9 +153,6 @@ def update_trading_price_graph(coin, algorithm, price_type, day_number, timefram
 
     df = pd.DataFrame(df)
     df.timestamp = pd.to_datetime(df.timestamp, unit = "s")
-
-    df["rsi"] = ta.rsi(df.close.astype(float))
-
     # Tạo biểu đồ nến
     figure = go.Figure(
                 data = [

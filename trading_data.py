@@ -12,12 +12,9 @@ def getDataFromCoin(coin):
   df = pd.DataFrame(df)
   df.timestamp = pd.to_datetime(df.timestamp, unit = "s")
 
-  df["rsi"] = ta.rsi(df.close.astype(float))
-  print(coin)
-  print(df.head())
   df.to_csv(f'./data/{coin}.csv')
 
 coins = [
-  'btcusd', 'ethusd', 'xrpusd', 'ltcusd', 'bnbusd', 'adausd', 'dotusd', 'solusd', 'linkusd', 'maticusd', 'dogeusd', ]
+  'btcusd', 'ethusd', 'xrpusd', 'ltcusd', 'adausd', 'dotusd', 'solusd', 'linkusd', 'maticusd', 'dogeusd', ]
 for coin in coins:
   getDataFromCoin(coin)
