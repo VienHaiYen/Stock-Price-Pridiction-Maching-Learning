@@ -2,17 +2,18 @@ from model.lstm_model import LSTMModelBuilder
 from model.rnn_model import RNNModelBuilder
 from model.xgboost_model import XGBModelBuilder
 from model.base import Model, ModelFileService
-from constant import coins, features
+from constant import coins, features, models
 from itertools import combinations
 import os
 from trading_data import getAllDataToCSV
+from model.factory import ModelBuilderFactory
 
 
 class ModelsInitializer:
-    def __init__(self, features=features, coins=coins):
+    def __init__(self, features=features, coins=coins, models=models):
         self.features = features
         self.coins = coins
-        self.models = [LSTMModelBuilder, RNNModelBuilder, XGBModelBuilder]
+        self.models = models
         self.modelFileDirectory = ModelFileService.getModelFileDirectory()
 
     def getFeaturesCombination(self):
@@ -27,17 +28,16 @@ class ModelsInitializer:
         for file in os.listdir(path):
             file_path = os.path.join(path, file)
             os.remove(file_path)
+
     def downloadTrainDataFiles(self):
         getAllDataToCSV()
 
     def buildModels(self):
         for coin in self.coins:
             for features_combination in self.getFeaturesCombination():
-                for ModelBuilder in self.models:
-                    ModelBuilder(
-                        model=Model(
-                            modelName="", features=features_combination, coin=coin
-                        )
+                for model in self.models:
+                    ModelBuilderFactory.getModelBuilder(
+                        model, features_combination, coin
                     ).buildModel()
 
     def init(self):

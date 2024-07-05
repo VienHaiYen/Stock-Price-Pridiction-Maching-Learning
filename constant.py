@@ -42,10 +42,9 @@ windowSize = 50
 models = ["LSTM", "RNN", "XGB"]
 coins = [
     "btcusd",
-    "ethusd",
-    "adausd",
+    # "ethusd",
+    # "adausd",
 ]
 candel_columns = ["open", "high", "low", "close"]
 lstm_units = 50
 simple_rnn_units = 50
-print(list(timeframes.values()))
