@@ -7,31 +7,9 @@ from dash.dependencies import Input, Output
 from datetime import date, timedelta
 import pandas as pd
 import pandas_ta as ta
+from trading_data import getDataFromCoin
+from constant import coins, algorithms, timeframes, day_number
 
-
-# getAllDataToCSV()
-algorithms = [
-  {'label': 'LSTM', 'value': 'lstm'},
-  {'label': 'RNN', 'value': 'rnn'},
-  {'label': 'XGBoost', 'value': 'xgboost'},
-]
-
-coins = [{'label': 'BTC-USD', 'value': 'btcusd'},
-    {'label': 'ETH-USD', 'value': 'ethusd'},
-    {'label': 'XRP-USD', 'value': 'xrpusd'},
-    {'label': 'LTC-USD', 'value': 'ltcusd'},
-    {'label': 'ADA-USD', 'value': 'adausd'},
-    {'label': 'DOT-USD', 'value': 'dotusd'},
-    {'label': 'SOL-USD', 'value': 'solusd'},
-    {'label': 'LINK-USD', 'value': 'linkusd'},
-    {'label': 'MATIC-USD', 'value': 'maticusd'},
-    {'label': 'DOGE-USD', 'value': 'dogeusd'}]
-day_number = [10, 20, 30, 60, 120]
-timeframes = [
-    {'label': '1 phút','value': 60},
-    {'label': '1 tiếng','value': 3600},
-    {'label': '1 ngày','value': 86400},
-    ]
 # initialize
 app = dash.Dash()
 server = app.server
@@ -99,10 +77,7 @@ app.layout = html.Div(
             multi=True,
             id='price-type-dropdown',
             options=[
-                # {'label': 'Open Price', 'value': 'Open'},
                 {'label': 'Close Price', 'value': 'Close'},
-                # {'label': 'Low Price', 'value': 'Low'},
-                # {'label': 'High Price', 'value': 'High'},
                 {'label': 'ROC', 'value': 'ROC'},
             ],
             value=['Close', 'ROC'],
@@ -144,15 +119,7 @@ app.layout = html.Div(
 )
 def update_trading_price_graph(coin, algorithm, price_type, day_number, timeframe, n_intervals):
     # GET dữ liệu dựa trên coin được chọn theo ngày
-    url = f"https://www.bitstamp.net/api/v2/ohlc/{coin}/"
-    params = {
-            "step":timeframe,
-            "limit":int(day_number),
-            }
-    df = requests.get(url, params=params).json()["data"]["ohlc"]
-
-    df = pd.DataFrame(df)
-    df.timestamp = pd.to_datetime(df.timestamp, unit = "s")
+    df = getDataFromCoin(coin, timeframe, day_number)
     # Tạo biểu đồ nến
     figure = go.Figure(
                 data = [
@@ -190,8 +157,6 @@ def addPredictCandle(figure, date):
 	)
 
 	figure.add_trace(new_candle)
-
-
 
 # start app
 if __name__=='__main__':
