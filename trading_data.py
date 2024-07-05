@@ -17,7 +17,7 @@ def getDataFromCoinToCSV(coin):
   url = f"https://www.bitstamp.net/api/v2/ohlc/{coin}/"
   params = {
           "step":86400,
-          "limit":int(365),
+          "limit":int(365*5),
           }
   df = requests.get(url, params=params).json()["data"]["ohlc"]
   df = pd.DataFrame(df)
