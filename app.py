@@ -35,14 +35,14 @@ app.layout = html.Div(
                         dcc.Dropdown(
                             id="coin-dropdown",
                             options=coin_labels,
-                            value="btcusd",
+                            value=coin_labels[0]['value'],
                             clearable=False,
                             style={"width": "200px"},
                         ),
                         dcc.Dropdown(
                             id="algorithm-dropdown",
                             options=algorithms,
-                            value="LSTM",
+                            value=algorithms[0]['value'],
                             clearable=False,
                             style={"width": "200px"},
                         ),
@@ -50,7 +50,7 @@ app.layout = html.Div(
                         dcc.Dropdown(
                             id="timeframe",
                             options=list(timeframes.values()),
-                            value=60,
+                            value=list(timeframes.values())[0]['value'],
                             clearable=False,
                             style={"width": "200px"},
                         ),
@@ -58,7 +58,7 @@ app.layout = html.Div(
                         dcc.Dropdown(
                             id="day-number",
                             options=day_number,
-                            value=20,
+                            value=day_number[0],
                             clearable=False,
                             style={"width": "200px"},
                         ),
@@ -74,7 +74,7 @@ app.layout = html.Div(
                     ],
                     value=["close", "ROC"],
                     clearable=False,
-                    style={"width": "auto", "min-width": "200px"},
+                    style={"width": "auto", "width": "250px"},
                 ),
             ],
         ),
@@ -118,12 +118,15 @@ def update_trading_price_graph(
     df = getDataFromCoin(coin, timeframe, day_number)
     # Tạo biểu đồ nến
     figure = go.Figure(
-        data=[
-            go.Candlestick(
-                x=df.timestamp, open=df.open, high=df.high, low=df.low, close=df.close
-            )
-        ]
-    )
+                data = [
+                    go.Candlestick(
+                        x = df.timestamp,
+                        open = df.open,
+                        high = df.high,
+                        low = df.low,
+                        close = df.close,
+                        name='Trading Price'
+                        )])
     # Thêm dự đoán vào biểu đồ
     if timeframe == timeframes["day"]["value"] and day_number >= windowSize:
         df['ROC'] = ROCCalculator().fromClose(df['close'])
