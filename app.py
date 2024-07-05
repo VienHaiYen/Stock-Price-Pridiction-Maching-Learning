@@ -116,7 +116,8 @@ def update_trading_price_graph(coin, algorithm, price_type, day_number, timefram
                         open = df.open,
                         high = df.high,
                         low = df.low,
-                        close = df.close
+                        close = df.close,
+                        name='Trading Price'
                         )])
     # Thêm dự đoán vào biểu đồ
     if(timeframe == 86400):
