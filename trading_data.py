@@ -22,10 +22,14 @@ def getDataFromCoinToCSV(coin):
   df = requests.get(url, params=params).json()["data"]["ohlc"]
   df = pd.DataFrame(df)
   df.timestamp = pd.to_datetime(df.timestamp, unit = "s")
+  new_df = df[['timestamp', 'open', 'close', 'high', 'low']]
 
-  df.to_csv(f'./data/{coin}.csv')
+  new_df.to_csv(f'./data/{coin}.csv')
 
-coins = [
-  'btcusd', 'ethusd', 'xrpusd', 'ltcusd', 'adausd', 'dotusd', 'solusd', 'linkusd', 'maticusd', 'dogeusd', ]
-for coin in coins:
-  getDataFromCoinToCSV(coin)
+def getAllDataToCSV():
+  coins = [
+    'btcusd', 'ethusd', 'xrpusd', 'ltcusd', 'adausd', 'dotusd', 'solusd', 'linkusd', 'maticusd', 'dogeusd', ]
+  for coin in coins:
+    getDataFromCoinToCSV(coin)
+
+getAllDataToCSV()
