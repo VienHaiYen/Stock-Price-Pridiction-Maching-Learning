@@ -89,8 +89,10 @@ class ModelPredictService:
         data = self.scaler.scale(data)
         # x_data = data.values.reshape(1, data.shape[0], data.shape[1])
         df_prediction = self.predict(data)
-        inverseScaled_output_data = self.scaler.inverseScale(df_prediction)
-        return inverseScaled_output_data
+        df_inverseScaled = self.scaler.inverseScale(df_prediction)
+        df_inverseScaled["high"] = max(df_inverseScaled.values.reshape(-1))
+        df_inverseScaled['low'] = min(df_inverseScaled.values.reshape(-1))
+        return df_inverseScaled
 
 
 class SavedModelPredictService(ModelPredictService):
