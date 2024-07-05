@@ -1,6 +1,5 @@
 import requests
 import pandas as pd
-import pandas_ta as ta
 
 def getDataFromCoin(coin, timeframe, day_number):
   url = f"https://www.bitstamp.net/api/v2/ohlc/{coin}/"

@@ -1,4 +1,3 @@
-import requests
 import dash
 from dash import dcc
 from dash import html
@@ -24,15 +23,7 @@ app.layout = html.Div(
                 html.Span("Trading Price Analysis"),
                 html.Span("Team 3")
               ],
-              style={
-                  'display': 'flex',
-                  'justifyContent': 'space-between',
-                  'backgroundColor': 'black',
-                  'color': 'white',
-                  'padding': '12px 20px',
-                  'textAlign': 'center',
-                  'fontWeight': 'bold'
-              }
+              className='header',
           ),
 
     # tool bar
@@ -86,7 +77,6 @@ app.layout = html.Div(
             ),
       ]
     ),
-
     # title
     html.H1("Trading Price Analysis Dashboard", style={"textAlign": "left", "margin": "20px"}),
     # graph presentation
