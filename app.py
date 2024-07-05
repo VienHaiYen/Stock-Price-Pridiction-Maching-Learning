@@ -4,8 +4,6 @@ from dash import html
 import plotly.graph_objs as go
 from dash.dependencies import Input, Output
 from datetime import date, timedelta
-import pandas as pd
-import pandas_ta as ta
 from trading_data import getDataFromCoin
 from constant import coins, algorithms, timeframes, day_number
 
