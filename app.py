@@ -15,10 +15,7 @@ algorithms = [
   {'label': 'RNN', 'value': 'rnn'},
   {'label': 'XGBoost', 'value': 'xgboost'},
 ]
-coins = ["BTC-USD", "ETH-USD",
-     "BNB-USD", "ADA-USD", "XRP-USD",
-     "SOL-USD", "DOT-USD", "DOGE-USD", "SHIB-USD", "LTC-USD"
-      ]
+
 _coins = [{'label': 'BTC-USD', 'value': 'btcusd'},
     {'label': 'ETH-USD', 'value': 'ethusd'},
     {'label': 'XRP-USD', 'value': 'xrpusd'},

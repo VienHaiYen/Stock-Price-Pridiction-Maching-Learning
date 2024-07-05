@@ -1,46 +1,23 @@
-import yfinance as yf
-from datetime import date, timedelta
+import requests
 import pandas as pd
+import pandas_ta as ta
 
+def getDataFromCoin(coin):
+  url = f"https://www.bitstamp.net/api/v2/ohlc/{coin}/"
+  params = {
+          "step":86400,
+          "limit":int(365),
+          }
+  df = requests.get(url, params=params).json()["data"]["ohlc"]
+  df = pd.DataFrame(df)
+  df.timestamp = pd.to_datetime(df.timestamp, unit = "s")
 
-def getTradeData(coin, start_date, end_date):
-  data = yf.download(coin, start_date, end_date)
-  return data
+  df["rsi"] = ta.rsi(df.close.astype(float))
+  print(coin)
+  print(df.head())
+  df.to_csv(f'./data/{coin}.csv')
 
-def getTradeDataToNow(coin, days):
-  end_date = date.today()
-  start_date = end_date - timedelta(days)
-  data = getTradeData(coin, start_date, end_date)
-
-  return data
-
-def getTradeDataByMinute(coin):
-  data = yf.download(coin, start= date.today(), interval='1m')
-  # real_time = data.iloc[-1:].copy()
-
-  # print(data)
-  # data.to_csv('test11.csv')
-
-  open = data['Open'][0]
-  high = data['High'].max()
-  low = data['Low'].min()
-  close = data['Close'][-1]
-  adj_close = data['Adj Close'][-1]
-  # print(open, high, low, close, adj_close)
-
-  result = pd.DataFrame({
-    'Open': open,
-    'High': high,
-    'Low': low,
-    'Close': close,
-    'Adj Close': adj_close,
-  }, index=[date.today()])
-  print(result)
-
-  return result
-
-getTradeDataByMinute('BTC-USD')
-
-# a = getTradeData('BTC-USD', date.today() - timedelta(10), date.today())
-# a['Date'] = a.index
-# print(a['Date'].max())
+coins = [
+  'btcusd', 'ethusd', 'xrpusd', 'ltcusd', 'bnbusd', 'adausd', 'dotusd', 'solusd', 'linkusd', 'maticusd', 'dogeusd', ]
+for coin in coins:
+  getDataFromCoin(coin)
