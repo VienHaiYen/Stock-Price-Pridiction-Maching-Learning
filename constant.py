@@ -7,14 +7,7 @@ algorithms = [
 
 coins = [{'label': 'BTC-USD', 'value': 'btcusd'},
     {'label': 'ETH-USD', 'value': 'ethusd'},
-    {'label': 'XRP-USD', 'value': 'xrpusd'},
-    {'label': 'LTC-USD', 'value': 'ltcusd'},
-    {'label': 'ADA-USD', 'value': 'adausd'},
-    {'label': 'DOT-USD', 'value': 'dotusd'},
-    {'label': 'SOL-USD', 'value': 'solusd'},
-    {'label': 'LINK-USD', 'value': 'linkusd'},
-    {'label': 'MATIC-USD', 'value': 'maticusd'},
-    {'label': 'DOGE-USD', 'value': 'dogeusd'}]
+    {'label': 'ADA-USD', 'value': 'adausd'},]
 day_number = [10, 20, 30, 60, 120]
 timeframes = [
     {'label': '1 phút','value': 60},

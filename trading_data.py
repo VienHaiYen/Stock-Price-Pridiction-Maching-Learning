@@ -20,7 +20,7 @@ def getDataFromCoinToCSV(coin):
 
 def getAllDataToCSV():
   coins = [
-    'btcusd', 'ethusd', 'xrpusd', 'ltcusd', 'adausd', 'dotusd', 'solusd', 'linkusd', 'maticusd', 'dogeusd', ]
+    'btcusd', 'ethusd', 'adausd']
   for coin in coins:
     getDataFromCoinToCSV(coin)
 
