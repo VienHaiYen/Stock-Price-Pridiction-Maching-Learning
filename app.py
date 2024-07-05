@@ -5,7 +5,10 @@ import plotly.graph_objs as go
 from dash.dependencies import Input, Output
 from datetime import date, timedelta
 from trading_data import getDataFromCoin
-from constant import coin_labels, algorithms, timeframes, day_number
+from constant import coin_labels, algorithms, timeframes, day_number, windowSize
+import pandas as pd
+from model.factory import ModelPredictServiceFactory
+from model.utils import ROCCalculator
 
 # initialize
 app = dash.Dash()
@@ -39,7 +42,7 @@ app.layout = html.Div(
                         dcc.Dropdown(
                             id="algorithm-dropdown",
                             options=algorithms,
-                            value="lstm",
+                            value="LSTM",
                             clearable=False,
                             style={"width": "200px"},
                         ),
@@ -64,12 +67,12 @@ app.layout = html.Div(
                 dcc.Dropdown(
                     placeholder="Select attributes",
                     multi=True,
-                    id="price-type-dropdown",
+                    id="feature-dropdown",
                     options=[
-                        {"label": "Close Price", "value": "Close"},
+                        {"label": "Close Price", "value": "close"},
                         {"label": "ROC", "value": "ROC"},
                     ],
-                    value=["Close", "ROC"],
+                    value=["close", "ROC"],
                     clearable=False,
                     style={"width": "auto", "min-width": "200px"},
                 ),
@@ -102,14 +105,14 @@ app.layout = html.Div(
     [
         Input("coin-dropdown", "value"),
         Input("algorithm-dropdown", "value"),
-        Input("price-type-dropdown", "value"),
+        Input("feature-dropdown", "value"),
         Input("day-number", "value"),
         Input("timeframe", "value"),
         Input("interval-component", "n_intervals"),
     ],
 )
 def update_trading_price_graph(
-    coin, algorithm, price_type, day_number, timeframe, n_intervals
+    coin, algorithm, features, day_number, timeframe, n_intervals
 ):
     # GET dữ liệu dựa trên coin được chọn theo ngày
     df = getDataFromCoin(coin, timeframe, day_number)
@@ -122,8 +125,13 @@ def update_trading_price_graph(
         ]
     )
     # Thêm dự đoán vào biểu đồ
-    if timeframe == 86400:
-        addPredictCandle(figure, df.timestamp.max() + timedelta(1))
+    if timeframe == timeframes["day"]["value"] and day_number >= windowSize:
+        df['ROC'] = ROCCalculator().fromClose(df['close'])
+        predictService = ModelPredictServiceFactory.getModelPredictService(
+            modelName=algorithm, features=features, coin=coin
+        )
+        prediction = predictService.execute(df)
+        addPredictCandle(figure, df.timestamp.max() + timedelta(1), prediction)
 
     figure.update_layout(
         title=f"Trading Price Analysis ({coin})",
@@ -135,14 +143,14 @@ def update_trading_price_graph(
     return figure
 
 
-def addPredictCandle(figure, date):
+def addPredictCandle(figure, date, candel_df: pd.DataFrame):
     # Thêm cây nến mới với màu sắc khác (ví dụ: màu xanh dương)
     new_candle = go.Candlestick(
         x=[date],  # Ngày của cây nến mới
-        open=[63000.00],  # Giá mở cửa của cây nến mới
-        high=[68000.00],  # Giá cao nhất của cây nến mới
-        low=[61000.00],  # Giá thấp nhất của cây nến mới
-        close=[67500.00],  # Giá đóng cửa của cây nến mới
+        open=candel_df["open"],  # Giá mở cửa của cây nến mới
+        high=candel_df["high"],  # Giá cao nhất của cây nến mới
+        low=candel_df["low"],  # Giá thấp nhất của cây nến mới
+        close=candel_df["close"],  # Giá đóng cửa của cây nến mới
         increasing=dict(line=dict(color="blue")),
         decreasing=dict(line=dict(color="yellow")),
         name="Predicted Trading Price",

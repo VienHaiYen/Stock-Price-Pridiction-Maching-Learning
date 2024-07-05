@@ -12,6 +12,10 @@ def getDataFromCoin(coin, timeframe, day_number):
 
   df = pd.DataFrame(df)
   df.timestamp = pd.to_datetime(df.timestamp, unit = "s")
+  df.open = df.open.astype(float)
+  df.close = df.close.astype(float)
+  df.high = df.high.astype(float)
+  df.low = df.low.astype(float)
   return df
 
 def getDataFromCoinToCSV(coin):

@@ -32,10 +32,17 @@ class ModelInputExtractor:
 class ModelInputValidator:
     def __init__(self, model: Model):
         self.model = model
-        self.featureValidator = FeatureValidator(self.model.features)
+        # self.featureValidator = FeatureValidator(self.model.features)
 
     def areValidFeatures(self, features):
-        return self.featureValidator.areValidFeatures(features)
+        # features has all self.model.features
+        featureValidator = FeatureValidator(features)
+        return all(
+            [
+                featureValidator.isValidFeature(feature)
+                for feature in self.model.features
+            ]
+        )
 
     def isValidInput(self, data):
         assert isinstance(data, pd.DataFrame)

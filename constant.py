@@ -1,21 +1,21 @@
 # getAllDataToCSV()
 algorithms = [
-    {"label": "LSTM", "value": "lstm"},
-    {"label": "RNN", "value": "rnn"},
-    {"label": "XGBoost", "value": "xgboost"},
+    {"label": "LSTM", "value": "LSTM"},
+    {"label": "RNN", "value": "RNN"},
+    {"label": "XGBoost", "value": "XGB"},
 ]
 
 coin_labels = [
     {"label": "BTC-USD", "value": "btcusd"},
     {"label": "ETH-USD", "value": "ethusd"},
-    {"label": "XRP-USD", "value": "xrpusd"},
-    {"label": "LTC-USD", "value": "ltcusd"},
+    # {"label": "XRP-USD", "value": "xrpusd"},
+    # {"label": "LTC-USD", "value": "ltcusd"},
     {"label": "ADA-USD", "value": "adausd"},
-    {"label": "DOT-USD", "value": "dotusd"},
-    {"label": "SOL-USD", "value": "solusd"},
-    {"label": "LINK-USD", "value": "linkusd"},
-    {"label": "MATIC-USD", "value": "maticusd"},
-    {"label": "DOGE-USD", "value": "dogeusd"},
+    # {"label": "DOT-USD", "value": "dotusd"},
+    # {"label": "SOL-USD", "value": "solusd"},
+    # {"label": "LINK-USD", "value": "linkusd"},
+    # {"label": "MATIC-USD", "value": "maticusd"},
+    # {"label": "DOGE-USD", "value": "dogeusd"},
 ]
 day_number = [10, 20, 30, 60, 120]
 timeframes = {
@@ -42,8 +42,8 @@ windowSize = 50
 models = ["LSTM", "RNN", "XGB"]
 coins = [
     "btcusd",
-    # "ethusd",
-    # "adausd",
+    "ethusd",
+    "adausd",
 ]
 candel_columns = ["open", "high", "low", "close"]
 lstm_units = 50
