@@ -1,0 +1,16 @@
+body {
+    background-color: white;
+    margin:0;
+}
+.DateInput_input {
+    font-size: 16px;
+}
+.header {
+    display: flex;
+    justify-content: space-between;
+    background-color: black;
+    color: white;
+    padding: 12px 20px;
+    text-align: center;
+    font-weight: bold
+}
