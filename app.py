@@ -141,7 +141,7 @@ def addPredictCandle(figure, date):
 			low=[61000.00],  # Giá thấp nhất của cây nến mới
 			close=[67500.00],  # Giá đóng cửa của cây nến mới
 			increasing=dict(line=dict(color='blue')),
-			decreasing=dict(line=dict(color='yellow')),
+			decreasing=dict(line=dict(color='#3C3B6E')),
 			name='Predicted Trading Price'
 	)
 
