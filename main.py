@@ -3,11 +3,12 @@ from model.train_data import TrainDataProvider
 from model.lstm_model import LSTMModelPredictService, LSTMModel
 from model.rnn_model import RNNModelPredictService, RNNModel
 from model.xgboost_model import XGBModelPredictService, XGBModel
-from constants import coins, windowSize, candel_columns, features
+from constant import coins, windowSize, candel_columns, features
 from model.factory import ModelPredictServiceFactory
+
 # from sklearn.metrics import mean_squared_error
 
-# ModelsInitializer().init()
+ModelsInitializer().init()
 features = features
 coin = coins[0]
 trainDataProvider = TrainDataProvider(
@@ -42,17 +43,10 @@ def getSample():
 
 
 sampleInput, sampleOutput = getSample()
-print(sampleOutput)
+print("actual", sampleOutput)
 lstmlPredictedOutput = lstmModelPredictService.execute(sampleInput)
 rnnPredictedOutput = rnnModelPredictService.execute(sampleInput)
 xgbPredictedOutput = xgbModelPredictService.execute(sampleInput[-1:])
-print("lstm", lstmlPredictedOutput)
-print("rnn", rnnPredictedOutput)
-print("xgb", xgbPredictedOutput)
-
-lstmlPredictedOutput = lstmFromFactory.execute(sampleInput)
-rnnPredictedOutput = rnnFromFactory.execute(sampleInput)
-xgbPredictedOutput = xgbFromFactory.execute(sampleInput[-1:])
 print("lstm", lstmlPredictedOutput)
 print("rnn", rnnPredictedOutput)
 print("xgb", xgbPredictedOutput)
