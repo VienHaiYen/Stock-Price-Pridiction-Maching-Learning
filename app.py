@@ -145,7 +145,6 @@ def update_trading_price_graph(
 
     return figure
 
-
 def addPredictCandle(figure, date, candel_df: pd.DataFrame):
     # Thêm cây nến mới với màu sắc khác (ví dụ: màu xanh dương)
     new_candle = go.Candlestick(
@@ -155,7 +154,7 @@ def addPredictCandle(figure, date, candel_df: pd.DataFrame):
         low=candel_df["low"],  # Giá thấp nhất của cây nến mới
         close=candel_df["close"],  # Giá đóng cửa của cây nến mới
         increasing=dict(line=dict(color="blue")),
-        decreasing=dict(line=dict(color="yellow")),
+        decreasing=dict(line=dict(color="#3C3B6E")),
         name="Predicted Trading Price",
     )
 
