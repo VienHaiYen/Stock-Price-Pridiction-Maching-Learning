@@ -33,14 +33,14 @@ app.layout = html.Div(
         children=[
             dcc.Dropdown(
                 id='coin-dropdown',
-                options=coins, 
-                value='btcusd', 
+                options=coins,
+                value=coins[0]['value'],
                 clearable=False,
                 style={"width": "200px"}),
             dcc.Dropdown(
                 id='algorithm-dropdown',
                 options=algorithms,
-                value='lstm',
+                value=algorithms[0]['value'],
                 clearable=False,
                 style={"width": "200px"}),
 
@@ -48,7 +48,7 @@ app.layout = html.Div(
             dcc.Dropdown(
                 id='timeframe',
                 options=timeframes,
-                value=60,
+                value=timeframes[0]['value'],
                 clearable=False,
                 style={"width": "200px"},
             ),
@@ -56,7 +56,7 @@ app.layout = html.Div(
             dcc.Dropdown(
                 id='day-number',
                 options=day_number,
-                value=20,
+                value=day_number[0],
                 clearable=False,
                 style={"width": "200px"},
             ),
@@ -71,7 +71,7 @@ app.layout = html.Div(
             ],
             value=['Close', 'ROC'],
             clearable=False,
-						style={"width": "auto", 'min-width': '200px'}
+						style={"width": "auto", 'width': '250px'}
             ),
       ]
     ),
