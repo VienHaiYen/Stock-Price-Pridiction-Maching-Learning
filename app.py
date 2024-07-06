@@ -2,7 +2,7 @@ import dash
 from dash import dcc
 from dash import html
 import plotly.graph_objs as go
-from dash.dependencies import Input, Output
+from dash.dependencies import Input, Output, State
 from datetime import date, timedelta
 from trading_data import getDataFromCoin
 from constant import coin_labels, algorithms, timeframes, day_number, windowSize
@@ -83,6 +83,10 @@ app.layout = html.Div(
             "Trading Price Analysis Dashboard",
             style={"textAlign": "left", "margin": "20px"},
         ),
+        # loading proccess
+        dcc.Loading(id='loading-indicator', type='default', children=[
+            html.Div(id='loading-placeholder')
+        ]),
         # graph presentation
         html.Div(
             children=[
@@ -95,13 +99,39 @@ app.layout = html.Div(
             style={"border": "solid 1px gray", "marginTop": "10px"},
         ),
         dcc.Interval(id="interval-component", interval=2 * 1000, n_intervals=0),
+        dcc.Store(id='loading-state', data={'loading': False}),
+        dcc.Store(id='data-state', data={'done': True}),
     ],
 )
-
+@app.callback(
+    Output('loading-placeholder', 'children'),
+    [Input('loading-state', 'data')]
+)
+def update_loading_placeholder(loading_state):
+    if loading_state['loading']:
+        return 'Loading...'
+    else:
+        return ''
+@app.callback(
+    Output('loading-state', 'data'),
+    [
+        Input("coin-dropdown", "value"),
+        Input("algorithm-dropdown", "value"),
+        Input("feature-dropdown", "value"),
+        Input("day-number", "value"),
+        Input("timeframe", "value"),
+        Input('data-state', 'data')
+    ]
+)
+def update_loading_state(coin, algorithm, features, day_number, timeframe, data_state):
+    if data_state['done']:
+        return {'loading': False}
+    return {'loading': True}
 
 # TRADING PRICE
 @app.callback(
     Output("candlestick-graph", "figure"),
+    Output('data-state', 'data'),
     [
         Input("coin-dropdown", "value"),
         Input("algorithm-dropdown", "value"),
@@ -114,6 +144,7 @@ app.layout = html.Div(
 def update_trading_price_graph(
     coin, algorithm, features, day_number, timeframe, n_intervals
 ):
+    data_state = {'done': False}
     # GET dữ liệu dựa trên coin được chọn theo ngày
     df = getDataFromCoin(coin, timeframe, day_number)
     # Tạo biểu đồ nến
@@ -142,8 +173,9 @@ def update_trading_price_graph(
         xaxis_title="Date",
         xaxis_rangeslider_visible=False,
     )
+    data_state = {'done': True}
 
-    return figure
+    return figure, data_state
 
 def addPredictCandle(figure, date, candel_df: pd.DataFrame):
     # Thêm cây nến mới với màu sắc khác (ví dụ: màu xanh dương)
