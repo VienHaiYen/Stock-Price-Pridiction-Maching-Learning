@@ -1,29 +1,28 @@
 import dash
-from dash import dcc
-from dash import html
+from dash import dcc, html
 import plotly.graph_objs as go
 from dash.dependencies import Input, Output, State
-from datetime import date, timedelta
+from datetime import timedelta
 from trading_data import getDataFromCoin
 from constant import coin_labels, algorithms, timeframes, day_number, windowSize
 import pandas as pd
 from model.factory import ModelPredictServiceFactory
 from model.utils import ROCCalculator
 
-# initialize
+# Initialize
 app = dash.Dash()
 server = app.server
 
-# implement ui
+# Implement UI
 app.layout = html.Div(
     style={"font-family": "Arial"},
     children=[
-        # header
+        # Header
         html.Div(
             children=[html.Span("Trading Price Analysis"), html.Span("Team 3")],
             className="header",
         ),
-        # tool bar
+        # Tool bar
         html.Div(
             style={
                 "padding": "12px 20px",
@@ -78,87 +77,100 @@ app.layout = html.Div(
                 ),
             ],
         ),
-        # title
-        html.H1(
-            "Trading Price Analysis Dashboard",
-            style={"textAlign": "left", "margin": "20px"},
+        # Title
+        html.Div(
+            style={"display": "flex", "alignItems":"center"},
+            children=[
+                html.H1(
+                    "Trading Price Analysis Dashboard",
+                    style={"textAlign": "left", "margin": "20px"},
+                ),
+                # Loading process
+                dcc.Loading(id='loading-indicator', type='default', children=[
+                    html.Div(id='loading-placeholder', style={"textAlign": "center"})
+                ]),
+            ]
         ),
-        # loading proccess
-        dcc.Loading(id='loading-indicator', type='default', children=[
-            html.Div(id='loading-placeholder')
-        ]),
-        # graph presentation
+        # Graph presentation
         html.Div(
             children=[
-                # dcc.Loading(
                 dcc.Graph(
                     id="candlestick-graph",
                 )
-                # ),
             ],
             style={"border": "solid 1px gray", "marginTop": "10px"},
         ),
         dcc.Interval(id="interval-component", interval=2 * 1000, n_intervals=0),
-        dcc.Store(id='loading-state', data={'loading': False}),
-        dcc.Store(id='data-state', data={'done': True}),
+        dcc.Interval(id='hide-loading-interval', interval=1* 1000, n_intervals=0, max_intervals=1)
     ],
 )
+
 @app.callback(
     Output('loading-placeholder', 'children'),
-    [Input('loading-state', 'data')]
-)
-def update_loading_placeholder(loading_state):
-    if loading_state['loading']:
-        return 'Loading...'
-    else:
-        return ''
-@app.callback(
-    Output('loading-state', 'data'),
     [
         Input("coin-dropdown", "value"),
         Input("algorithm-dropdown", "value"),
         Input("feature-dropdown", "value"),
         Input("day-number", "value"),
         Input("timeframe", "value"),
-        Input('data-state', 'data')
+        Input('hide-loading-interval', 'n_intervals')
+    ],
+    [State('loading-placeholder', 'children')]
+)
+def update_loading_state(coin, algorithm, features, day_number, timeframe, n_intervals, current_state):
+    ctx = dash.callback_context
+
+    if not ctx.triggered:
+        return ''
+
+    input_id = ctx.triggered[0]['prop_id'].split('.')[0]
+
+    if input_id in ["coin-dropdown", "algorithm-dropdown", "feature-dropdown", "day-number", "timeframe"]:
+        return 'Loading...'
+    elif input_id == 'hide-loading-interval' and n_intervals > 0:
+        return ''
+
+    return current_state
+
+@app.callback(
+    Output('hide-loading-interval', 'n_intervals'),
+    [
+        Input("coin-dropdown", "value"),
+        Input("algorithm-dropdown", "value"),
+        Input("feature-dropdown", "value"),
+        Input("day-number", "value"),
+        Input("timeframe", "value")
     ]
 )
-def update_loading_state(coin, algorithm, features, day_number, timeframe, data_state):
-    if data_state['done']:
-        return {'loading': False}
-    return {'loading': True}
+def start_loading_interval(coin, algorithm, features, day_number, timeframe):
+    return 0
 
-# TRADING PRICE
 @app.callback(
     Output("candlestick-graph", "figure"),
-    Output('data-state', 'data'),
     [
         Input("coin-dropdown", "value"),
         Input("algorithm-dropdown", "value"),
         Input("feature-dropdown", "value"),
         Input("day-number", "value"),
         Input("timeframe", "value"),
-        Input("interval-component", "n_intervals"),
-    ],
+        Input("interval-component", "n_intervals")
+    ]
 )
-def update_trading_price_graph(
-    coin, algorithm, features, day_number, timeframe, n_intervals
-):
-    data_state = {'done': False}
-    # GET dữ liệu dựa trên coin được chọn theo ngày
+def update_trading_price_graph(coin, algorithm, features, day_number, timeframe, n_intervals):
     df = getDataFromCoin(coin, timeframe, day_number)
-    # Tạo biểu đồ nến
     figure = go.Figure(
-                data = [
-                    go.Candlestick(
-                        x = df.timestamp,
-                        open = df.open,
-                        high = df.high,
-                        low = df.low,
-                        close = df.close,
-                        name='Trading Price'
-                        )])
-    # Thêm dự đoán vào biểu đồ
+        data=[
+            go.Candlestick(
+                x=df.timestamp,
+                open=df.open,
+                high=df.high,
+                low=df.low,
+                close=df.close,
+                name='Trading Price'
+            )
+        ]
+    )
+
     if timeframe == timeframes["day"]["value"] and day_number >= windowSize:
         df['ROC'] = ROCCalculator().fromClose(df['close'])
         predictService = ModelPredictServiceFactory.getModelPredictService(
@@ -173,26 +185,21 @@ def update_trading_price_graph(
         xaxis_title="Date",
         xaxis_rangeslider_visible=False,
     )
-    data_state = {'done': True}
 
-    return figure, data_state
+    return figure
 
 def addPredictCandle(figure, date, candel_df: pd.DataFrame):
-    # Thêm cây nến mới với màu sắc khác (ví dụ: màu xanh dương)
     new_candle = go.Candlestick(
-        x=[date],  # Ngày của cây nến mới
-        open=candel_df["open"],  # Giá mở cửa của cây nến mới
-        high=candel_df["high"],  # Giá cao nhất của cây nến mới
-        low=candel_df["low"],  # Giá thấp nhất của cây nến mới
-        close=candel_df["close"],  # Giá đóng cửa của cây nến mới
+        x=[date],
+        open=candel_df["open"],
+        high=candel_df["high"],
+        low=candel_df["low"],
+        close=candel_df["close"],
         increasing=dict(line=dict(color="blue")),
         decreasing=dict(line=dict(color="#3C3B6E")),
         name="Predicted Trading Price",
     )
-
     figure.add_trace(new_candle)
 
-
-# start app
 if __name__ == "__main__":
     app.run_server(debug=True)
