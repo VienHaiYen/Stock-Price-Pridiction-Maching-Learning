@@ -8,6 +8,7 @@
     - 20120447 - Trịnh Quốc Cường
     - 20120633 - Viên Hải Yến
     - 20120634 - Lê Minh Trí
+- Link github: https://github.com/VienHaiYen/Stock-Price-Pridiction-Maching-Learning
 - Video demo: https://www.youtube.com/watch?v=ImtZThBnUyg&feature=youtu.be
 
 ## Yêu cầu:
