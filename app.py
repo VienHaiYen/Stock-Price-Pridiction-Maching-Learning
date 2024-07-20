@@ -34,14 +34,14 @@ app.layout = html.Div(
                         dcc.Dropdown(
                             id="coin-dropdown",
                             options=coin_labels,
-                            value=coin_labels[0]['value'],
+                            value=coin_labels[0]["value"],
                             clearable=False,
                             style={"width": "200px"},
                         ),
                         dcc.Dropdown(
                             id="algorithm-dropdown",
                             options=algorithms,
-                            value=algorithms[0]['value'],
+                            value=algorithms[0]["value"],
                             clearable=False,
                             style={"width": "200px"},
                         ),
@@ -49,7 +49,7 @@ app.layout = html.Div(
                         dcc.Dropdown(
                             id="timeframe",
                             options=list(timeframes.values()),
-                            value=list(timeframes.values())[0]['value'],
+                            value=list(timeframes.values())[0]["value"],
                             clearable=False,
                             style={"width": "200px"},
                         ),
@@ -79,17 +79,23 @@ app.layout = html.Div(
         ),
         # Title
         html.Div(
-            style={"display": "flex", "alignItems":"center"},
+            style={"display": "flex", "alignItems": "center"},
             children=[
                 html.H1(
                     "Trading Price Analysis Dashboard",
                     style={"textAlign": "left", "margin": "20px"},
                 ),
                 # Loading process
-                dcc.Loading(id='loading-indicator', type='default', children=[
-                    html.Div(id='loading-placeholder', style={"textAlign": "center"})
-                ]),
-            ]
+                dcc.Loading(
+                    id="loading-indicator",
+                    type="default",
+                    children=[
+                        html.Div(
+                            id="loading-placeholder", style={"textAlign": "center"}
+                        )
+                    ],
+                ),
+            ],
         ),
         # Graph presentation
         html.Div(
@@ -101,49 +107,65 @@ app.layout = html.Div(
             style={"border": "solid 1px gray", "marginTop": "10px"},
         ),
         dcc.Interval(id="interval-component", interval=2 * 1000, n_intervals=0),
-        dcc.Interval(id='hide-loading-interval', interval=1* 1000, n_intervals=0, max_intervals=1)
+        dcc.Interval(
+            id="hide-loading-interval",
+            interval=1 * 1000,
+            n_intervals=0,
+            max_intervals=1,
+        ),
     ],
 )
 
+
 @app.callback(
-    Output('loading-placeholder', 'children'),
+    Output("loading-placeholder", "children"),
     [
         Input("coin-dropdown", "value"),
         Input("algorithm-dropdown", "value"),
         Input("feature-dropdown", "value"),
         Input("day-number", "value"),
         Input("timeframe", "value"),
-        Input('hide-loading-interval', 'n_intervals')
+        Input("hide-loading-interval", "n_intervals"),
     ],
-    [State('loading-placeholder', 'children')]
+    [State("loading-placeholder", "children")],
 )
-def update_loading_state(coin, algorithm, features, day_number, timeframe, n_intervals, current_state):
+def update_loading_state(
+    coin, algorithm, features, day_number, timeframe, n_intervals, current_state
+):
     ctx = dash.callback_context
 
     if not ctx.triggered:
-        return ''
+        return ""
 
-    input_id = ctx.triggered[0]['prop_id'].split('.')[0]
+    input_id = ctx.triggered[0]["prop_id"].split(".")[0]
 
-    if input_id in ["coin-dropdown", "algorithm-dropdown", "feature-dropdown", "day-number", "timeframe"]:
-        return 'Loading...'
-    elif input_id == 'hide-loading-interval' and n_intervals > 0:
-        return ''
+    if input_id in [
+        "coin-dropdown",
+        "algorithm-dropdown",
+        "feature-dropdown",
+        "day-number",
+        "timeframe",
+    ]:
+        return "Loading..."
+    elif input_id == "hide-loading-interval" and n_intervals > 0:
+        return ""
 
     return current_state
 
+
 @app.callback(
-    Output('hide-loading-interval', 'n_intervals'),
+    Output("hide-loading-interval", "n_intervals"),
     [
         Input("coin-dropdown", "value"),
         Input("algorithm-dropdown", "value"),
         Input("feature-dropdown", "value"),
         Input("day-number", "value"),
-        Input("timeframe", "value")
-    ]
+        Input("timeframe", "value"),
+    ],
 )
 def start_loading_interval(coin, algorithm, features, day_number, timeframe):
     return 0
+
 
 @app.callback(
     Output("candlestick-graph", "figure"),
@@ -153,10 +175,12 @@ def start_loading_interval(coin, algorithm, features, day_number, timeframe):
         Input("feature-dropdown", "value"),
         Input("day-number", "value"),
         Input("timeframe", "value"),
-        Input("interval-component", "n_intervals")
-    ]
+        Input("interval-component", "n_intervals"),
+    ],
 )
-def update_trading_price_graph(coin, algorithm, features, day_number, timeframe, n_intervals):
+def update_trading_price_graph(
+    coin, algorithm, features, day_number, timeframe, n_intervals
+):
     df = getDataFromCoin(coin, timeframe, day_number)
     figure = go.Figure(
         data=[
@@ -166,13 +190,18 @@ def update_trading_price_graph(coin, algorithm, features, day_number, timeframe,
                 high=df.high,
                 low=df.low,
                 close=df.close,
-                name='Trading Price'
+                name="Trading Price",
             )
         ]
     )
 
-    if timeframe == timeframes["day"]["value"] and day_number >= windowSize:
-        df['ROC'] = ROCCalculator().fromClose(df['close'])
+    isPredictable = (
+        timeframe == timeframes["day"]["value"]
+        and day_number >= windowSize
+        and len(features) > 0
+    )
+    if isPredictable:
+        df["ROC"] = ROCCalculator().fromClose(df["close"])
         predictService = ModelPredictServiceFactory.getModelPredictService(
             modelName=algorithm, features=features, coin=coin
         )
@@ -188,6 +217,7 @@ def update_trading_price_graph(coin, algorithm, features, day_number, timeframe,
 
     return figure
 
+
 def addPredictCandle(figure, date, candel_df: pd.DataFrame):
     new_candle = go.Candlestick(
         x=[date],
@@ -200,6 +230,7 @@ def addPredictCandle(figure, date, candel_df: pd.DataFrame):
         name="Predicted Trading Price",
     )
     figure.add_trace(new_candle)
+
 
 if __name__ == "__main__":
     app.run_server(debug=True)
